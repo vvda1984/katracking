@@ -1,0 +1,47 @@
+﻿<ion-side-menus>
+    <ion-side-menu-content class="mainScreen">
+        <div class="bar bar-header bar-positive">
+            <button class="button button-icon icon ion-navicon" ng-click="mc.showHideMenu()"></button>
+            <div class="h1 title">MAIN</div>
+        </div>
+
+        <ion-content class="padding has-header" overflow-scroll="false">
+            <div class="card" ng-repeat="jg in mc.data.journalGroups">
+                <div ng-class="jg.isCurrent ? 'item item-balanced item-divider' : 'item item-dark item-divider'">
+                    {{jg.name}}
+                </div>
+                <div class="list">
+                    <a ng-repeat="j in jg.journals" class="item item-icon-left item-icon-right" href="" ng-click="mc.viewJournal(jg.id, j.id);">
+                        <i class="icon ion-chatbubble-working"></i>
+                        <h2>{{j.name}}</h2>
+                        <p>{{j.description}}</p>
+                        <i class="icon ion-ios-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </ion-content>
+    </ion-side-menu-content>
+
+    <ion-side-menu side="left">
+        <ion-content overflow-scroll="false">
+            <div class="list">
+                <div class="slide-menu-header">
+                    <img src="../img/logo-large.png" class="profile-image" />
+                    <h3 style="color:#fff; margin-top:8px;">{{mc.user.firstName}} {{mc.user.lastName}}</h3>
+                </div>
+                <ion-item class="item-icon-left" href="" ng-click="mc.openTruck()">
+                    <i class="icon ion-android-bus"></i>{{mc.R.SelectTruck}}
+                </ion-item>
+                <ion-item class="item-icon-left" href="" ng-click="mc.openConfig()">
+                    <i class="icon ion-gear-a"></i>{{mc.R.Settings}}
+                </ion-item>
+                <ion-item class="item-icon-left" href="" ng-click="mc.logout()">
+                    <i class="icon ion-android-exit"></i>{{mc.R.Logout}}
+                </ion-item>
+                <ion-item class="item-icon-left" href="" ng-click="mc.exitApp()">
+                    <i class="icon ion-close-circled"></i>{{mc.R.Exit}}
+                </ion-item>
+            </div>
+        </ion-content>
+    </ion-side-menu>
+</ion-side-menus>

@@ -1,0 +1,38 @@
+var language_en = {
+    Signin: "Đăng Nhập",
+    Username: "Username",
+    Password: "Password",
+    Powered_by: "Powered by Digital Horizon",
+    Settings: "Cấu Hình",
+    Error: "Error",
+    Signing: "Đăng Nhập...",
+    Username_is_empty: "Vui lòng nhập tên đăng nhập!",
+    Password_is_empty: "Vui lòng nhập mật khẩu!",
+    IPaddress_is_empty: "Vui lòng nhập địa chỉ IP!",
+    Port_is_empty: "Vui lòng nhập Port!",
+    Service_is_empty: "Vui lòng nhập tên service!",
+    Timout_is_invalid: "Timeout phải lớn hơn zero (0)!",
+    Saving: "Saving...",
+    IPAddress: "Địa chỉ IP",
+    Port: "Port",
+    ServiceName: "Tên Service",
+    Timeout: "Timeout",
+    Save: "Lưu",
+    OnDateJournals: "Hành Trình Trong Ngày",
+    JournalList: "Danh Sách Hành Trình",
+    JournalDetail: "Hành Trình",
+    Trucks: "Danh Sách Xe",
+    SelectTruck: "Chọn Xe",
+    Loading: "Loading.  ..",
+    TruckDetail: "Chi Tiết Xe",
+    Select: "Chọn",
+    Logout: "Đăng Xuất",
+    Exit: "Đóng Ứng Dụng",
+    Confirm: "Confirm",
+    DisplayMap: "Hiển Thị Bản Đồ",
+};
+var resources = {
+    language: language_en,
+};
+
+//# sourceMappingURL=resources.js.map
