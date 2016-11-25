@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 namespace KLogistic.WebService
 {
     [DataContract]
-    public class TruckModel
+    public class TruckModel : BaseModel
     {
         [DataMember(Name = "id")]
         public long Id { get; set; }
@@ -19,6 +19,9 @@ namespace KLogistic.WebService
         [DataMember(Name = "description")]
         public string Description { get; set; }
 
+        [DataMember(Name = "status")]
+        public int Status { get; set; }
+
         public TruckModel()
         {
         }
@@ -29,6 +32,9 @@ namespace KLogistic.WebService
             Name = truck.TruckName;
             Number = truck.TruckNumber;
             Description = truck.Description;
+            Status = (int)truck.Status;
+            LastUpdatedTS = truck.LastUpdatedTS;
+            CreatedTS = truck.CreatedTS;
         }
     }
 }

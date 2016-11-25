@@ -11,12 +11,12 @@ namespace KLogistic.WebService
         GetJournalsResponse GetJournals(ServiceRequest request);
 
         [OperationContract]
-        [WebInvoke(Method = "POST", UriTemplate = "getjournal", ResponseFormat = WebMessageFormat.Json)]
+        [WebInvoke(Method = "POST", UriTemplate = "getJournal", ResponseFormat = WebMessageFormat.Json)]
         GetJournalResponse GetJournal(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "updateJournal", ResponseFormat = WebMessageFormat.Json)]
-        Response UpdateJournal(ServiceRequest request);
+        BaseResponse UpdateJournal(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "addJournal", ResponseFormat = WebMessageFormat.Json)]
@@ -24,7 +24,7 @@ namespace KLogistic.WebService
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "removeJournal", ResponseFormat = WebMessageFormat.Json)]
-        Response RemoveJournal(ServiceRequest request);
+        BaseResponse RemoveJournal(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "getJourney", ResponseFormat = WebMessageFormat.Json)]
@@ -32,7 +32,7 @@ namespace KLogistic.WebService
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "addJournalLocation", ResponseFormat = WebMessageFormat.Json)]
-        Response AddJournalLocation(ServiceRequest request);
+        BaseResponse AddJournalLocation(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "getJournalStopPoints", ResponseFormat = WebMessageFormat.Json)]
@@ -44,7 +44,7 @@ namespace KLogistic.WebService
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "updateJournalStopPoint", ResponseFormat = WebMessageFormat.Json)]
-        Response UpdateJournalStopPoint(ServiceRequest request);
+        BaseResponse UpdateJournalStopPoint(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "addJournalStopPoint", ResponseFormat = WebMessageFormat.Json)]
@@ -52,11 +52,11 @@ namespace KLogistic.WebService
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "removeJournalStopPoint", ResponseFormat = WebMessageFormat.Json)]
-        Response RemoveJournalStopPoint(ServiceRequest request);
+        BaseResponse RemoveJournalStopPoint(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "removeAllJournalStopPoint", ResponseFormat = WebMessageFormat.Json)]
-        Response RemoveAllJournalStopPoint(ServiceRequest request);
+        BaseResponse RemoveAllJournalStopPoint(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "getAttachments", ResponseFormat = WebMessageFormat.Json)]
@@ -72,6 +72,30 @@ namespace KLogistic.WebService
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "deleteAttachment", ResponseFormat = WebMessageFormat.Json)]
-        Response DeleteAttachment(ServiceRequest request);
+        BaseResponse DeleteAttachment(ServiceRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "getJournalTrucks", ResponseFormat = WebMessageFormat.Json)]
+        GetJournalTrucksResponse GetJournalTrucks(ServiceRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "getJourneyByTruck", ResponseFormat = WebMessageFormat.Json)]
+        GetJourneyResponse GetJourneyByTruck(ServiceRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "startJournal", ResponseFormat = WebMessageFormat.Json)]
+        BaseResponse StartJournal(ServiceRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "endJournal", ResponseFormat = WebMessageFormat.Json)]
+        BaseResponse EndJournal(ServiceRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "returnJournal", ResponseFormat = WebMessageFormat.Json)]
+        BaseResponse ReturnJournal(ServiceRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "trackJournal", ResponseFormat = WebMessageFormat.Json)]
+        BaseResponse TrackJournal(ServiceRequest request);
     }
 }

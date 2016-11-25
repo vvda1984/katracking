@@ -35,34 +35,38 @@ namespace KLogistic.WebService
             });
         }
 
-        public Response UpdateUser(ServiceRequest request)
+        public BaseResponse UpdateUser(ServiceRequest request)
         {
-            return Run<ServiceRequest, Response>(request, (resp, db, session) =>
+            return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {
                 ValidateParam(request.UserId);
                 long driverId = request.UserId.Value;
 
-                var driver = db.GetUser(driverId);
-                if (driver == null)
+                var user = db.GetUser(driverId);
+                if (user == null)
                     throw new KException("User is not found");
 
                 string firstName = request.FirstName;
                 string lastName = request.LastName;
                 string ssn = request.Ssn;
                 string address = request.Address;
-                DateTime? dob = request.Dob;
+                string dob = request.Dob;
                 string phone = request.Phone;
                 string email = request.Email;
                 string note = request.Note;
-            
-                if (firstName != null) driver.FirstName = firstName;
-                if (lastName != null) driver.LastName = lastName;
-                if (ssn != null) driver.SSN = ssn;
-                if (address != null) driver.Address = address;
-                if (dob != null) driver.DOB = dob.Value;
-                if (phone != null) driver.Phone = phone;
-                if (email != null) driver.Email = email;
-                if (note != null) driver.Note = note;
+                int? status = request.Status;
+                int? role = request.Role;
+
+                if (firstName != null) user.FirstName = firstName;
+                if (lastName != null) user.LastName = lastName;
+                if (ssn != null) user.SSN = ssn;
+                if (address != null) user.Address = address;
+                if (dob != null) user.DOB = DateTime.ParseExact(request.Dob, "yyyy-MM-dd", null);
+                if (phone != null) user.Phone = phone;
+                if (email != null) user.Email = email;
+                if (note != null) user.Note = note;
+                if (status != null) user.Status = (Status)status.Value;
+                if (role != null) user.Role = (UserRole)role.Value;
             });
         }
 
@@ -70,52 +74,54 @@ namespace KLogistic.WebService
         {
             return Run<ServiceRequest, GetUserResponse>(request, (resp, db, session) =>
             {
-                ValidateParam(request.UserId);
-                long driverId = request.UserId.Value;
+                //ValidateParam(request.UserId);
+                //long userId = request.UserId.Value;
 
                 string username = request.UserName;
+                string password = request.Password;
                 string firstName = request.FirstName;
                 string lastName = request.LastName;
                 string ssn = request.Ssn;
                 string address = request.Address;
-                DateTime? dob = request.Dob;
+                string dob = request.Dob;
                 string phone = request.Phone;
                 string email = request.Email;
                 string note = request.Note;
-                string licenseNo = request.LicenseNo;
-                string classType = request.ClassType;
-                string issuedPlace = request.IssuedPlace;
-                DateTime? expiredDate = request.ExpiredDate;
-                DateTime? issuedDate = request.IssuedDate;
+                int? status = request.Status;
+                int? role = request.Role;
 
-                var user = db.GetUser(username);
-                if (user != null)
+                var existingUser = db.GetUser(username);
+                if (existingUser != null)
                     throw new KException($"User {username} existed!");
 
-                var driver = new User();
-                driver.Username = username;
-                driver.FirstName = firstName;
-                driver.LastName = lastName;
-                driver.SSN = ssn;
-                driver.Address = address;
-                driver.DOB = request.Dob ?? request.Dob.Value;
-                driver.Phone = phone;
-                driver.Email = email;
-                driver.Note = note;
-                driver.Role = UserRole.User;
-                driver.LastUpdatedTS = DateTime.Now;
-                driver.CreatedTS = DateTime.Now;
+                var user = new User();
+                user.Username = username;
+                user.Password = Utils.HashPassword(password);
+                user.FirstName = firstName;
+                user.LastName = lastName;
+                user.SSN = ssn;
+                user.Address = address;
+                user.DOB = DateTime.ParseExact(request.Dob, "yyyy-MM-dd", null);//  request.Dob ?? request.Dob.Value;
+                user.Phone = phone;
+                user.Email = email;
+                user.Note = note;
 
-                db.AddUser(driver);
+                user.Status = (status != null) ? (Status)status.Value : Status.Actived;
+                user.Role = (role != null) ? (UserRole)role.Value : UserRole.User;
+
+                user.LastUpdatedTS = DateTime.Now;
+                user.CreatedTS = DateTime.Now;
+
+                db.AddUser(user);
 
                 db.SaveChanges();
-                resp.Item = new UserModel(driver);
+                resp.Item = new UserModel(user);
             }, false);
         }
 
-        public Response BlockUser(ServiceRequest request)
+        public BaseResponse BlockUser(ServiceRequest request)
         {
-            return Run<ServiceRequest, Response>(request, (resp, db, session) =>
+            return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {
                 ValidateParam(request.UserId);
                 long driverId = request.UserId.Value;
@@ -129,9 +135,9 @@ namespace KLogistic.WebService
             }, false);
         }
 
-        public Response UnblockUser(ServiceRequest request)
+        public BaseResponse UnblockUser(ServiceRequest request)
         {
-            return Run<ServiceRequest, Response>(request, (resp, db, session) =>
+            return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {
                 ValidateParam(request.UserId);
                 long driverId = request.UserId.Value;
@@ -156,7 +162,7 @@ namespace KLogistic.WebService
             }, false);
         }
 
-        public Response RemoveUser(ServiceRequest request)
+        public BaseResponse RemoveUser(ServiceRequest request)
         {
             return Run<ServiceRequest, GetUsersResponse>(request, (resp, db, session) =>
             {
@@ -178,7 +184,7 @@ namespace KLogistic.WebService
             }, false);
         }
 
-        public Response RestoreUser(ServiceRequest request)
+        public BaseResponse RestoreUser(ServiceRequest request)
         {
             return Run<ServiceRequest, GetUsersResponse>(request, (resp, db, session) =>
             {

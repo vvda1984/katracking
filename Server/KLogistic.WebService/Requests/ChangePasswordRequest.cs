@@ -3,7 +3,7 @@
 namespace KLogistic.WebService
 {
     [DataContract]
-    public class ChangePasswordRequest : Request
+    public class ChangePasswordRequest : BaseRequest
     {
         [DataMember]
         public string UserName { get; set; }

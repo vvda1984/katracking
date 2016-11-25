@@ -35,9 +35,9 @@ namespace KLogistic.WebService
             });
         }
 
-        public Response UpdateDriver(ServiceRequest request)
+        public BaseResponse UpdateDriver(ServiceRequest request)
         {            
-            return Run<ServiceRequest, Response>(request, (resp, db, session) =>
+            return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {                
                 ValidateParam(request.DriverId);
                 long driverId = request.DriverId.Value;
@@ -50,31 +50,31 @@ namespace KLogistic.WebService
                 string lastName = request.LastName;
                 string ssn = request.Ssn;
                 string address = request.Address;
-                DateTime? dob = request.Dob;
+                string dob = request.Dob;
                 string phone = request.Phone;
                 string email = request.Email;
                 string note = request.Note;
                 string licenseNo = request.LicenseNo;
                 string classType = request.ClassType;
                 string issuedPlace = request.IssuedPlace;
-                DateTime? expiredDate = request.ExpiredDate;
-                DateTime? issuedDate = request.IssuedDate;
+                string expiredDate = request.ExpiredDate;
+                string issuedDate = request.IssuedDate;
+                int? status = request.Status;
 
-               
-              
                 if (firstName != null) driver.FirstName = firstName;
                 if (lastName != null) driver.LastName = lastName;
                 if (ssn != null) driver.SSN = ssn;
                 if (address != null) driver.Address = address;
-                if (dob != null) driver.DOB = dob.Value;
+                if (dob != null) driver.DOB = DateTime.ParseExact(request.Dob, "yyyy-MM-dd", null); //dob.Value;
                 if (phone != null) driver.Phone = phone;
                 if (email != null) driver.Email = email;
                 if (note != null) driver.Note = note;
                 if (licenseNo != null) driver.Note = licenseNo;
                 if (classType != null) driver.Note = classType;
                 if (issuedPlace != null) driver.Note = issuedPlace;
-                if (expiredDate != null) driver.ExpiredDate = expiredDate.Value;
-                if (issuedDate != null) driver.IssuedDate = issuedDate.Value;
+                if (expiredDate != null) driver.ExpiredDate = DateTime.ParseExact(request.ExpiredDate, "yyyy-MM-dd", null);
+                if (issuedDate != null) driver.IssuedDate = DateTime.ParseExact(request.IssuedDate, "yyyy-MM-dd", null);
+                if (status != null) driver.Status = (Status)status.Value;
             });
         }
 
@@ -82,23 +82,25 @@ namespace KLogistic.WebService
         {
             return Run<ServiceRequest, GetDriverResponse>(request, (resp, db, session) =>
             {
-                ValidateParam(request.DriverId);
-                long driverId = request.DriverId.Value;
+                //ValidateParam(request.DriverId);
+                //long driverId = request.DriverId.Value;
 
                 string username = request.UserName;
+                string password = request.Password;
                 string firstName = request.FirstName;
                 string lastName = request.LastName;
                 string ssn = request.Ssn;
                 string address = request.Address;
-                DateTime? dob = request.Dob;
+                string dob = request.Dob;
                 string phone = request.Phone;
                 string email = request.Email;
                 string note = request.Note;
                 string licenseNo = request.LicenseNo;
                 string classType = request.ClassType;
                 string issuedPlace = request.IssuedPlace;
-                DateTime? expiredDate = request.ExpiredDate;
-                DateTime? issuedDate = request.IssuedDate;
+                string expiredDate = request.ExpiredDate;
+                string issuedDate = request.IssuedDate;
+                int? status = request.Status;
 
                 var user = db.GetUser(username);
                 if (user != null)
@@ -106,11 +108,12 @@ namespace KLogistic.WebService
 
                 var driver = new Driver();
                 driver.Username = username;
+                driver.Password = Utils.HashPassword(password);
                 driver.FirstName = firstName;
                 driver.LastName = lastName;
                 driver.SSN = ssn;
                 driver.Address = address;
-                driver.DOB = request.Dob?? request.Dob.Value;
+                driver.DOB = DateTime.ParseExact(request.Dob, "yyyy-MM-dd", null);//request.Dob?? request.Dob.Value;
                 driver.Phone = phone;
                 driver.Email = email;
                 driver.Note = note;
@@ -118,10 +121,11 @@ namespace KLogistic.WebService
                 driver.LicenseNo = licenseNo;
                 driver.ClassType = classType;
                 driver.IssuedPlace = issuedPlace;
-                driver.ExpiredDate = request.ExpiredDate ?? request.Dob.Value;
-                driver.IssuedDate = request.IssuedDate ?? request.Dob.Value;
+                driver.ExpiredDate = DateTime.ParseExact(request.ExpiredDate, "yyyy-MM-dd", null);
+                driver.IssuedDate = DateTime.ParseExact(request.IssuedDate, "yyyy-MM-dd", null);
                 driver.LastUpdatedTS = DateTime.Now;
                 driver.CreatedTS = DateTime.Now;
+                driver.Status = (status != null) ? (Status)status.Value : Status.Actived;
 
                 db.AddDriver(driver);
 
@@ -130,9 +134,9 @@ namespace KLogistic.WebService
             }, false);
         }
 
-        public Response BlockDriver(ServiceRequest request)
+        public BaseResponse BlockDriver(ServiceRequest request)
         {           
-            return Run<ServiceRequest, Response>(request, (resp, db, session) =>
+            return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {
                 ValidateParam(request.DriverId);
                 long driverId = request.DriverId.Value;
@@ -146,9 +150,9 @@ namespace KLogistic.WebService
             }, false);
         }
 
-        public Response UnblockDriver(ServiceRequest request)
+        public BaseResponse UnblockDriver(ServiceRequest request)
         {           
-            return Run<ServiceRequest, Response>(request, (resp, db, session) =>
+            return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {
                 ValidateParam(request.DriverId);
                 long driverId = request.DriverId.Value;
@@ -173,7 +177,7 @@ namespace KLogistic.WebService
             }, false);
         }
 
-        public Response RemoveDriver(ServiceRequest request)
+        public BaseResponse RemoveDriver(ServiceRequest request)
         {            
             return Run<ServiceRequest, GetDriversResponse>(request, (resp, db, session) =>
             {
@@ -195,7 +199,7 @@ namespace KLogistic.WebService
             }, false);
         }
 
-        public Response RestoreDriver(ServiceRequest request)
+        public BaseResponse RestoreDriver(ServiceRequest request)
         {           
             return Run<ServiceRequest, GetDriversResponse>(request, (resp, db, session) =>
             {

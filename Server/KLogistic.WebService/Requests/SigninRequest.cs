@@ -3,7 +3,7 @@
 namespace KLogistic.WebService
 {
     [DataContract]
-    public class SigninRequest : Request
+    public class SigninRequest : BaseRequest
     {
         [DataMember]
         public string UserName { get; set; }

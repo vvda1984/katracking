@@ -45,9 +45,9 @@ namespace KLogistic.WebService
             });
         }
 
-        public Response UpdateJournalStopPoint(ServiceRequest request)
+        public BaseResponse UpdateJournalStopPoint(ServiceRequest request)
         {           
-            return Run<ServiceRequest, Response>(request, (resp, db, session) =>
+            return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {
                 ValidateParam(request.StopPointId);
                 long stopPointId = request.StopPointId.Value;
@@ -74,9 +74,6 @@ namespace KLogistic.WebService
         {           
             return Run<ServiceRequest, GetStopPointResponse>(request, (resp, db, session) =>
             {
-                ValidateParam(request.StopPointId);
-                long stopPointId = request.StopPointId.Value;
-
                 ValidateParam(request.JournalId);
                 long journalId = request.JournalId.Value;
 
@@ -100,9 +97,9 @@ namespace KLogistic.WebService
             });
         }
 
-        public Response RemoveJournalStopPoint(ServiceRequest request)
+        public BaseResponse RemoveJournalStopPoint(ServiceRequest request)
         {           
-            return Run<ServiceRequest, Response>(request, (resp, db, session) =>
+            return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {
                 ValidateParam(request.StopPointId);
                 long stopPointId = request.StopPointId.Value;
@@ -112,9 +109,9 @@ namespace KLogistic.WebService
             });
         }
 
-        public Response RemoveAllJournalStopPoint(ServiceRequest request)
+        public BaseResponse RemoveAllJournalStopPoint(ServiceRequest request)
         {            
-            return Run<ServiceRequest, Response>(request, (resp, db, session) =>
+            return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {
                 ValidateParam(request.JournalId);
                 long journalId = request.JournalId.Value;

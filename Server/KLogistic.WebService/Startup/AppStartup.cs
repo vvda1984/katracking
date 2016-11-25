@@ -25,7 +25,7 @@ namespace KLogistic
                     var cb = new ContainerBuilder();
 
                     cb.Register(c => new LoggerFactory()).As<ILoggerFactory>().SingleInstance();
-                    Response.RegisterResponses(cb);
+                    BaseResponse.RegisterResponses(cb);
 
                     var container = cb.Build();
 

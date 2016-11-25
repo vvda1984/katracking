@@ -43,12 +43,8 @@ namespace KLogistic.WebService
         {           
             return Run<ServiceRequest, GetAttachmentResponse>(request, (resp, db, session) =>
             {
-                ValidateParam(request.JournalId);
                 long journalId = request.JournalId.Value;
-
-                ValidateParam(request.AttachmentId);
                 long attachmentId = request.AttachmentId.Value;
-               
                 string name = request.FileName;
 
                 var item = GetAttachment(db, attachmentId, name, journalId);
@@ -91,18 +87,12 @@ namespace KLogistic.WebService
             }, false);
         }
         
-        public Response DeleteAttachment(ServiceRequest request)
+        public BaseResponse DeleteAttachment(ServiceRequest request)
         {           
-            return Run<ServiceRequest, Response>(request, (resp, db, session) =>
+            return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {
-                ValidateParam(request.JournalId);
-                long journalId = request.JournalId.Value;
-
                 ValidateParam(request.AttachmentId);
                 long attachmentId = request.AttachmentId.Value;
-
-                string name = request.FileName;
-
                 var item = db.DBModel.JournalAttachments.FirstOrDefault(x => x.Id == attachmentId);
                 if (item != null)
                 {

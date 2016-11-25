@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace KLogistic.WebService
 {
     [DataContract]
-    public class JournalStopPointModel
+    public class JournalStopPointModel : BaseModel
     {
         [DataMember(Name = "id")]
         public long Id { get; set; }
@@ -38,6 +38,8 @@ namespace KLogistic.WebService
             Latitude = journal.Latitude;
             Longitude = journal.Longitude;
             ExtendedData = journal.ExtendedData;
+            LastUpdatedTS = journal.LastUpdatedTS;
+            CreatedTS = journal.CreatedTS;
         }
     }
 }

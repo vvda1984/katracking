@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace KLogistic.WebService
 {
     [DataContract]
-    public class Response
+    public class BaseResponse
     {
         [DataMember(Name = "status")]
         public int Status { get; set; }
@@ -15,7 +15,7 @@ namespace KLogistic.WebService
 
         public static void RegisterResponses(ContainerBuilder cb)
         {
-            cb.Register(c => new Response()).As<Response>();
+            cb.Register(c => new BaseResponse()).As<BaseResponse>();
             cb.Register(c => new GetAttachmentResponse()).As<GetAttachmentResponse>();
             cb.Register(c => new GetAttachmentsResponse()).As<GetAttachmentsResponse>();
             cb.Register(c => new GetDriverResponse()).As<GetDriverResponse>();
@@ -31,6 +31,7 @@ namespace KLogistic.WebService
             cb.Register(c => new GetUsersResponse()).As<GetUsersResponse>();
             cb.Register(c => new SigninResponse()).As<SigninResponse>();
             cb.Register(c => new UploadAttachmentResponse()).As<UploadAttachmentResponse>();
+            cb.Register(c => new GetJournalTrucksResponse()).As<GetJournalTrucksResponse>();
         }
     }
 }

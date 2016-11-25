@@ -5,8 +5,8 @@ using System.Runtime.Serialization;
 namespace KLogistic.WebService
 {
     [DataContract]
-    public class JournalLocationModel
-    {
+    public class JournalLocationModel : BaseModel
+    { 
         [DataMember(Name = "journalId")]
         public long JournalId { get; set; }
 
@@ -27,20 +27,14 @@ namespace KLogistic.WebService
 
         [DataMember(Name = "stopCount")]
         public int StopCount { get; set; }
-
-        [DataMember(Name = "createdTS")]
-        public DateTime CreatedTS { get; set; }
-
-        [DataMember(Name = "lastUpdatedTS")]
-        public DateTime LastUpdatedTS { get; set; }
-
+      
         public JournalLocationModel() { }
 
         public JournalLocationModel(JournalLocation item)
         {
             JournalId = item.JournalId;
-            DriverId = item.UserId;
-            TruckId = item.TruckId ?? item.TruckId.Value;
+            DriverId = item.DriverId;
+            TruckId = item.TruckId;
             Latitude = item.Latitude;
             Longitude = item.Longitude;
             Accuracy = item.Accuracy;

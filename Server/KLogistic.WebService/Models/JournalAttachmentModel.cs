@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 namespace KLogistic.WebService
 {
     [DataContract]
-    public class JournalAttachmentModel
+    public class JournalAttachmentModel : BaseModel
     {
         [DataMember(Name = "id")]
         public long Id { get; set; }
@@ -19,12 +19,6 @@ namespace KLogistic.WebService
         [DataMember(Name = "data")]
         public string Data { get; set; }
 
-        [DataMember(Name = "createdTS")]
-        public DateTime CreatedTS { get; set; }
-
-        [DataMember(Name = "lastUpdatedTS")]
-        public DateTime LastUpdatedTS { get; set; }
-
         public JournalAttachmentModel() { }
 
         public JournalAttachmentModel(JournalAttachment item)
@@ -34,7 +28,7 @@ namespace KLogistic.WebService
             Data = item.DataBase64;
             Name = item.Name;
             CreatedTS = item.CreatedTS;
-            LastUpdatedTS = item.LastUpdatedTS;
+            LastUpdatedTS = item.LastUpdatedTS;            
         }
     }
 

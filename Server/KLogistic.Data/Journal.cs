@@ -45,8 +45,7 @@ namespace KLogistic.Data
         [EnumDataType(typeof(JournalStatus))]
         public JournalStatus Status { get; set; }
 
-        [Column(TypeName = "xml")]
-        [Required]
+        [Column(TypeName = "xml")]     
         public string ExtendedData { get; set; }
 
         public DateTime CreatedTS { get; set; }

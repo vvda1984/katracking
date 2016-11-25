@@ -17,7 +17,7 @@ namespace KLogistic.WebService
             Log = LogManager.GetLogger<KAService>();
         }
 
-        public Response SendRequest()
+        public BaseResponse SendRequest()
         {
             try
             {
@@ -32,7 +32,7 @@ namespace KLogistic.WebService
                 }
             }
             catch { }
-            return new Response { ErrorMessage = null, Status = 0 };
+            return new BaseResponse { ErrorMessage = null, Status = 0 };
         }
 
         //private TResponse SafeProcess<TResponse>(TResponse response, Action<TResponse> action) where TResponse : Response
@@ -122,7 +122,21 @@ namespace KLogistic.WebService
                 throw new KException("Missing parameter");
         }
 
-        private TResponse Run<TRequest, TResponse>(TRequest request, Action<TResponse, DataContext> action, bool ignoreSaveChanged = false) where TResponse : Response where TRequest : Request
+        private long ValidateParamLong(long? id, string name = "") 
+        {
+            if (id == null)
+                throw new KException($"Missing parameter {name}");
+            return id.Value;
+        }
+
+        private double ValidateParamDouble(double? id, string name = "")
+        {
+            if (id == null)
+                throw new KException($"Missing parameter {name}");
+            return id.Value;
+        }
+
+        private TResponse Run<TRequest, TResponse>(TRequest request, Action<TResponse, DataContext> action, bool ignoreSaveChanged = false) where TResponse : BaseResponse where TRequest : BaseRequest
         {
             var response = DependencyResolver.Resolve<TResponse>();
             try
@@ -142,7 +156,7 @@ namespace KLogistic.WebService
         }
 
         private TResponse Run<TRequest, TResponse>(TRequest request, Action<TResponse, DataContext, AppSession> action, bool ignoreSaveChanged = false)
-            where TResponse : Response where TRequest : Request
+            where TResponse : BaseResponse where TRequest : BaseRequest
         {
             var response = DependencyResolver.Resolve<TResponse>();
             try

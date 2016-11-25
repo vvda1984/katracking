@@ -10,7 +10,6 @@ namespace KLogistic.Data
         Actived = 0,
         Blocked = 1,
         Deleted = 2,
-
         Inactived = 10,
     }
 
@@ -32,16 +31,27 @@ namespace KLogistic.Data
 
     public enum JournalStatus : byte
     {
-        Initial = 0,
-        Running = 2,
+        Actived = 0,
+        Started = 2,
         Completed = 3,
         Deleted = 4,
+        Cancelled = 5,
     }
 
     public enum JournalDriverStatus : byte
     {
-        Asigned = 0,
-        Approved = 1,
-        Denied = 2,
+        Actived = 0,
+        Started = 1,
+        Completed = 2,
+        Cancelled = 5,
     }
+
+    public enum TruckStatus : byte
+    {
+        Actived = 0,
+        Blocked = 1,
+        Deleted = 2,
+        Inactived = 10,       
+        Working = 20,        
+    }    
 }

@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace KLogistic.WebService
 {
     [DataContract]
-    public class JourneyModel
+    public class JourneyModel : BaseModel
     {
         [DataMember(Name = "journalId")]
         public long JournalId { get; set; }

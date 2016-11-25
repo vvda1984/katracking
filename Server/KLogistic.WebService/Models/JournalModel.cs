@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 namespace KLogistic.WebService
 {
     [DataContract]
-    public class JournalModel
+    public class JournalModel : BaseModel
     {
         [DataMember(Name = "id")]
         public long Id { get; set; }
@@ -72,6 +72,8 @@ namespace KLogistic.WebService
             Status = (int)journal.Status;
             ExtendedData = journal.ExtendedData;
             Description = journal.Description;
+            LastUpdatedTS = journal.LastUpdatedTS;
+            CreatedTS = journal.CreatedTS;
 
             StopPoints = new List<JournalStopPointModel>();
             Activities = new List<JournalActivityModel>();

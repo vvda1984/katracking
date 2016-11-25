@@ -159,9 +159,11 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Models\JournalTruckModel.cs" />
     <Compile Include="Requests\ChangePasswordRequest.cs" />
     <Compile Include="Requests\ServiceRequest.cs" />
     <Compile Include="Requests\UploadAttachmentRequest.cs" />
+    <Compile Include="Responses\GetJournalTrucksResponse.cs" />
     <Compile Include="Startup\BehaviorExtension\NewtonsoftJsonBehavior.cs" />
     <Compile Include="Startup\BehaviorExtension\NewtonsoftJsonBehaviorExtension.cs" />
     <Compile Include="Startup\BehaviorExtension\NewtonsoftJsonContentTypeMapper.cs" />

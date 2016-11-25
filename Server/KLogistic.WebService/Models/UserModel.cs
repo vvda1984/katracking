@@ -43,6 +43,9 @@ namespace KLogistic.WebService
         [DataMember(Name = "note")]
         public string Note { get; set; }
 
+        [DataMember(Name = "status")]
+        public int Status { get; set; }
+
         public UserModel()
         {
         }
@@ -60,6 +63,9 @@ namespace KLogistic.WebService
             Role = (int)user.Role;
             SSN = user.SSN;
             Username = user.Username;
+            Status = (int)user.Status;
+            LastUpdatedTS = user.LastUpdatedTS;
+            CreatedTS = user.CreatedTS;
         }
     }
 }

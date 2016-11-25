@@ -16,7 +16,7 @@ namespace KLogistic.WebService
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "updatedriver", ResponseFormat = WebMessageFormat.Json)]
-        Response UpdateDriver(ServiceRequest request);
+        BaseResponse UpdateDriver(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "adddriver", ResponseFormat = WebMessageFormat.Json)]
@@ -24,11 +24,11 @@ namespace KLogistic.WebService
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "blockdriver", ResponseFormat = WebMessageFormat.Json)]
-        Response BlockDriver(ServiceRequest request);
+        BaseResponse BlockDriver(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "unblockdriver", ResponseFormat = WebMessageFormat.Json)]
-        Response UnblockDriver(ServiceRequest request);
+        BaseResponse UnblockDriver(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "getblockeddrivers", ResponseFormat = WebMessageFormat.Json)]
@@ -36,10 +36,10 @@ namespace KLogistic.WebService
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "removedriver", ResponseFormat = WebMessageFormat.Json)]
-        Response RemoveDriver(ServiceRequest request);
+        BaseResponse RemoveDriver(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "restoredriver", ResponseFormat = WebMessageFormat.Json)]
-        Response RestoreDriver(ServiceRequest request);
+        BaseResponse RestoreDriver(ServiceRequest request);
     }
 }

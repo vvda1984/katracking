@@ -2,6 +2,7 @@
 using KLogistic.Data;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.ServiceModel.Web;
 
 namespace KLogistic.WebService
@@ -37,32 +38,51 @@ namespace KLogistic.WebService
             });
         }
 
-        public Response Signout(Request request)
+        public BaseResponse Signout(BaseRequest request)
         {       
-            return Run<Request, Response>(request, (res, db) => db.SignOut(request.Token));
+            return Run<BaseRequest, BaseResponse>(request, (res, db) => db.SignOut(request.Token));
         }
 
-        public Response ChangePassword(ChangePasswordRequest request)
+        public BaseResponse ChangePassword(ChangePasswordRequest request)
         {            
-            return Run<ChangePasswordRequest, Response>(request, (resp, db, session) =>
+            return Run<ChangePasswordRequest, BaseResponse>(request, (resp, db, session) =>
             {
-                string curpassword = request.CurrentPassword;
-                string newpassword = request.CurrentPassword;
+                string curPassword = request.CurrentPassword;
+                string newPassword = request.NewPassword;
 
-                if (string.IsNullOrEmpty(curpassword))
-                    throw new KException("Current password is empty!");
+                if (string.IsNullOrEmpty(request.UserName))
+                {
+                    if (string.IsNullOrEmpty(curPassword))
+                        throw new KException("Current password is empty!");
 
-                string hashOldPassword = Utils.HashPassword(curpassword);
-                if (session.User.Password != hashOldPassword)
-                    throw new KException("Current password does not match!");
+                    if (string.IsNullOrEmpty(newPassword))
+                        throw new KException("New password is empty!");
+                
+                    string hashCurrentPassword = Utils.HashPassword(curPassword);
+                    if (session.User.Password != hashCurrentPassword)
+                        throw new KException("Current password does not match!");
 
-                session.User.Password = Utils.HashPassword(newpassword);
+                    session.User.Password = Utils.HashPassword(newPassword);
+                    session.User.LastUpdatedTS = DateTime.Now;
+                }
+                else
+                {
+                    var user = db.DBModel.Users.FirstOrDefault(x => string.Compare(x.Username, request.UserName, StringComparison.OrdinalIgnoreCase) == 0);
+                    if(user == null)
+                        throw new KException("User doesn't exist!");
+
+                    if (string.IsNullOrEmpty(newPassword))
+                        throw new KException("New password is empty!");
+
+                    session.User.Password = Utils.HashPassword(newPassword);
+                    session.User.LastUpdatedTS = DateTime.Now;
+                }                
             });
         }
 
-        public Response Ping(Request request)
+        public BaseResponse Ping(BaseRequest request)
         {
-            return Run<Request, Response>(request, (resp, db, session) =>
+            return Run<BaseRequest, BaseResponse>(request, (resp, db, session) =>
             {
                 session.LastUpdatedTS = DateTime.Now;
             });

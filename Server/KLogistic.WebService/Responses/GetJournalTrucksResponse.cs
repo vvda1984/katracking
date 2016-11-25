@@ -7,9 +7,9 @@ using System.Web;
 namespace KLogistic.WebService
 {
     [DataContract]
-    public class BaseRequest
+    public class GetJournalTrucksResponse : BaseResponse
     {
-        [DataMember(Name = "token")]
-        public string Token { get; set; }
+        [DataMember(Name = "items")]
+        public List<JournalTruckModel> Items { get; set; }
     }
 }

@@ -14,10 +14,10 @@ namespace KLogistic.WebService
     {
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "ping", ResponseFormat = WebMessageFormat.Json)]
-        Response Ping(Request request);
+        BaseResponse Ping(BaseRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "sendRequest", ResponseFormat = WebMessageFormat.Json)]
-        Response SendRequest();
+        BaseResponse SendRequest();
     }
 }

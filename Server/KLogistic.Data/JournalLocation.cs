@@ -8,16 +8,14 @@ namespace KLogistic.Data
     [Table("JournalLocations")]  
     public partial class JournalLocation
     {
-        [Key]
-        [Column(Order = 0)]
+        [Key, Column("JournalLocationId")]
+        public long Id { get; set; }
+
         public long JournalId { get; set; }
 
-        [Key]
-        [Column(Order = 1)]
-        [DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public long UserId { get; set; }
+        public long DriverId { get; set; }
 
-        public long? TruckId { get; set; }
+        public long TruckId { get; set; }
 
         public double Latitude { get; set; }
 

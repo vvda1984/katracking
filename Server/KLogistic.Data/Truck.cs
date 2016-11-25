@@ -25,15 +25,14 @@ namespace KLogistic.Data
         [StringLength(100)]
         public string TruckNumber { get; set; }
 
-        [Column(TypeName = "xml")]
-        [Required]
+        [Column(TypeName = "xml")]        
         public string ExtendedData { get; set; }
 
         [StringLength(512)]
         public string Description { get; set; }
 
-        [EnumDataType(typeof(Status))]
-        public Status Status { get; set; }
+        [EnumDataType(typeof(TruckStatus))]
+        public TruckStatus Status { get; set; }
 
         public DateTime CreatedTS { get; set; }
 

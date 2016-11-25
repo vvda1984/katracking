@@ -30,6 +30,8 @@ namespace KLogistic.WebService
             IssuedDate = driver.IssuedDate;
             IssuedPlace = driver.IssuedPlace;
             ExpiredDate = driver.ExpiredDate;
+            CreatedTS = driver.CreatedTS;
+            LastUpdatedTS = driver.LastUpdatedTS;
         }
     }
 }

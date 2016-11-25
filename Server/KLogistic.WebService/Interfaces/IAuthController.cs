@@ -12,10 +12,10 @@ namespace KLogistic.WebService
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "signout", ResponseFormat = WebMessageFormat.Json)]
-        Response Signout(Request request);
+        BaseResponse Signout(BaseRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "changePassword", ResponseFormat = WebMessageFormat.Json)]
-        Response ChangePassword(ChangePasswordRequest request);
+        BaseResponse ChangePassword(ChangePasswordRequest request);
     }
 }

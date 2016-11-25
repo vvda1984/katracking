@@ -7,7 +7,7 @@ using System.Web;
 namespace KLogistic.WebService
 {
     [DataContract]
-    public class GetStopPointsResponse : Response
+    public class GetStopPointsResponse : BaseResponse
     {
         [DataMember(Name = "items")]
         public List<JournalStopPointModel> Items { get; set; }

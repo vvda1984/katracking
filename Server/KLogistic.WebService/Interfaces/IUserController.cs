@@ -16,7 +16,7 @@ namespace KLogistic.WebService
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "updateuser", ResponseFormat = WebMessageFormat.Json)]
-        Response UpdateUser(ServiceRequest request);
+        BaseResponse UpdateUser(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "adduser", ResponseFormat = WebMessageFormat.Json)]
@@ -24,11 +24,11 @@ namespace KLogistic.WebService
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "blockuser", ResponseFormat = WebMessageFormat.Json)]
-        Response BlockUser(ServiceRequest request);
+        BaseResponse BlockUser(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "unblockuser", ResponseFormat = WebMessageFormat.Json)]
-        Response UnblockUser(ServiceRequest request);
+        BaseResponse UnblockUser(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "getblockedusers", ResponseFormat = WebMessageFormat.Json)]
@@ -36,10 +36,10 @@ namespace KLogistic.WebService
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "removeuser", ResponseFormat = WebMessageFormat.Json)]
-        Response RemoveUser(ServiceRequest request);
+        BaseResponse RemoveUser(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "restoreuser", ResponseFormat = WebMessageFormat.Json)]
-        Response RestoreUser(ServiceRequest request);
+        BaseResponse RestoreUser(ServiceRequest request);
     }
 }

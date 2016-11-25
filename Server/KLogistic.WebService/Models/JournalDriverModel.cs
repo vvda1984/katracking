@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 namespace KLogistic.WebService
 {
     [DataContract]
-    public class JournalDriverModel
+    public class JournalDriverModel : BaseModel
     {
         [DataMember(Name = "journalId")]
         public long JournalId { get; set; }
@@ -18,12 +18,6 @@ namespace KLogistic.WebService
 
         [DataMember(Name = "status")]
         public int Status { get; set; }
-
-        [DataMember(Name = "createdTS")]
-        public DateTime CreatedTS { get; set; }
-
-        [DataMember(Name = "lastUpdatedTS")]
-        public DateTime LastUpdatedTS { get; set; }
 
         public JournalDriverModel() { }
 

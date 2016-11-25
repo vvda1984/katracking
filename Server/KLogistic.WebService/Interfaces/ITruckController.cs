@@ -16,7 +16,7 @@ namespace KLogistic.WebService
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "updatetruck", ResponseFormat = WebMessageFormat.Json)]
-        Response UpdateTruck(ServiceRequest request);
+        BaseResponse UpdateTruck(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "addtruck", ResponseFormat = WebMessageFormat.Json)]
@@ -24,11 +24,11 @@ namespace KLogistic.WebService
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "blocktruck", ResponseFormat = WebMessageFormat.Json)]
-        Response BlockTruck(ServiceRequest request);
+        BaseResponse BlockTruck(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "unblocktruck", ResponseFormat = WebMessageFormat.Json)]
-        Response UnblockTruck(ServiceRequest request);
+        BaseResponse UnblockTruck(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "getblockedtrucks", ResponseFormat = WebMessageFormat.Json)]
@@ -36,10 +36,10 @@ namespace KLogistic.WebService
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "removetruck", ResponseFormat = WebMessageFormat.Json)]
-        Response RemoveTruck(ServiceRequest request);
+        BaseResponse RemoveTruck(ServiceRequest request);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "restoretruck", ResponseFormat = WebMessageFormat.Json)]
-        Response RestoreTruck(ServiceRequest request);
+        BaseResponse RestoreTruck(ServiceRequest request);
     }
 }

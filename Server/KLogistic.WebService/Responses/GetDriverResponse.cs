@@ -3,7 +3,7 @@
 namespace KLogistic.WebService
 {
     [DataContract]
-    public class GetDriverResponse : Response
+    public class GetDriverResponse : BaseResponse
     {
         [DataMember(Name = "item")]
         public DriverModel Item { get; set; }

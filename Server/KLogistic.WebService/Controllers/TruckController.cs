@@ -10,7 +10,7 @@ namespace KLogistic.WebService
     {
         public GetTrucksResponse GetTrucks(ServiceRequest request)
         {            
-            return Run<Request, GetTrucksResponse>(request, (resp, db, session) =>
+            return Run<BaseRequest, GetTrucksResponse>(request, (resp, db, session) =>
             {
                 resp.Items = new System.Collections.Generic.List<TruckModel>();
                 var items = db.GetTrucks();
@@ -21,7 +21,7 @@ namespace KLogistic.WebService
 
         public GetTruckResponse GetTruck(ServiceRequest request)
         {
-           return Run<Request, GetTruckResponse>(request, (resp, db, session) =>
+           return Run<BaseRequest, GetTruckResponse>(request, (resp, db, session) =>
            {
                ValidateParam(request.TruckId);
                long truckId = request.TruckId.Value;
@@ -34,9 +34,9 @@ namespace KLogistic.WebService
            });
         }
 
-        public Response UpdateTruck(ServiceRequest request)
+        public BaseResponse UpdateTruck(ServiceRequest request)
         {           
-            return Run<Request, Response>(request, (resp, db, session) =>
+            return Run<BaseRequest, BaseResponse>(request, (resp, db, session) =>
             {
                 ValidateParam(request.TruckId);
                 long truckId = request.TruckId.Value;
@@ -59,7 +59,7 @@ namespace KLogistic.WebService
 
         public GetTruckResponse AddTruck(ServiceRequest request)
         {          
-            return Run<Request, GetTruckResponse>(request, (resp, db, session) =>
+            return Run<BaseRequest, GetTruckResponse>(request, (resp, db, session) =>
             {
                 string name = request.Name;
                 string number = request.Number;
@@ -71,7 +71,7 @@ namespace KLogistic.WebService
                 truck.Description = description;                
                 truck.LastUpdatedTS = DateTime.Now;
                 truck.CreatedTS = DateTime.Now;
-                truck.Status = Status.Actived;
+                truck.Status = TruckStatus.Actived;
 
                 db.AddTruck(truck);
 
@@ -80,9 +80,9 @@ namespace KLogistic.WebService
             }, false);
         }
 
-        public Response BlockTruck(ServiceRequest request)
+        public BaseResponse BlockTruck(ServiceRequest request)
         {            
-            return Run<Request, Response>(request, (resp, db, session) =>
+            return Run<BaseRequest, BaseResponse>(request, (resp, db, session) =>
             {
                 ValidateParam(request.TruckId);
                 long truckId = request.TruckId.Value;
@@ -91,14 +91,14 @@ namespace KLogistic.WebService
                 if (truck == null)
                     throw new KException("Truck is not found");
 
-                truck.Status = Status.Blocked;
+                truck.Status = TruckStatus.Blocked;
                 truck.LastUpdatedTS = DateTime.Now;
             }, false);
         }
 
-        public Response UnblockTruck(ServiceRequest request)
+        public BaseResponse UnblockTruck(ServiceRequest request)
         {
-            return Run<Request, Response>(request, (resp, db, session) =>
+            return Run<BaseRequest, BaseResponse>(request, (resp, db, session) =>
             {
                 ValidateParam(request.TruckId);
                 long truckId = request.TruckId.Value;
@@ -107,25 +107,25 @@ namespace KLogistic.WebService
                 if (truck == null)
                     throw new KException("Truck is not found");
 
-                truck.Status = Status.Actived;
+                truck.Status = TruckStatus.Actived;
                 truck.LastUpdatedTS = DateTime.Now;
             }, false);
         }
 
         public GetTrucksResponse GetBlockedTrucks(ServiceRequest request)
         {            
-            return Run<Request, GetTrucksResponse>(request, (resp, db, session) =>
+            return Run<BaseRequest, GetTrucksResponse>(request, (resp, db, session) =>
             {
                 resp.Items = new System.Collections.Generic.List<TruckModel>();
-                var trucks = db.DBModel.Trucks.Where(x=>x.Status == Status.Blocked);
+                var trucks = db.DBModel.Trucks.Where(x=>x.Status == TruckStatus.Blocked);
                 foreach (var truck in trucks)
                     resp.Items.Add(new TruckModel(truck));
             }, false);
         }
 
-        public Response RemoveTruck(ServiceRequest request)
+        public BaseResponse RemoveTruck(ServiceRequest request)
         {            
-            return Run<Request, Response>(request, (resp, db, session) =>
+            return Run<BaseRequest, BaseResponse>(request, (resp, db, session) =>
             {
                 ValidateParam(request.TruckId);
                 long truckId = request.TruckId.Value;
@@ -134,19 +134,19 @@ namespace KLogistic.WebService
                 if (truck == null)
                     throw new KException("Truck is not found");
 
-                if (truck.Status == Status.Inactived)
+                if (truck.Status == TruckStatus.Inactived)
                     db.RemoveTruck(truck);
                 else
                 {
-                    truck.Status = Status.Deleted;
+                    truck.Status = TruckStatus.Deleted;
                     truck.LastUpdatedTS = DateTime.Now;
                 }
             }, false);
         }
 
-        public Response RestoreTruck(ServiceRequest request)
+        public BaseResponse RestoreTruck(ServiceRequest request)
         {           
-            return Run<Request, Response>(request, (resp, db, session) =>
+            return Run<BaseRequest, BaseResponse>(request, (resp, db, session) =>
             {
                 ValidateParam(request.TruckId);
                 long truckId = request.TruckId.Value;
@@ -155,7 +155,7 @@ namespace KLogistic.WebService
                 if (truck == null)
                     throw new KException("Truck is not found");
 
-                truck.Status = Status.Actived;
+                truck.Status = TruckStatus.Actived;
                 truck.LastUpdatedTS = DateTime.Now;
             }, false);
         }

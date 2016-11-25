@@ -3,7 +3,7 @@
 namespace KLogistic.WebService
 {
     [DataContract]
-    public class UploadAttachmentRequest : Request
+    public class UploadAttachmentRequest : BaseRequest
     {
         [DataMember(Name = "journalId")]
         public long JournalId { get; set; }

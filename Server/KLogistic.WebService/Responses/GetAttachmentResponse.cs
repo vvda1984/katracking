@@ -3,7 +3,7 @@
 namespace KLogistic.WebService
 {
     [DataContract]
-    public class GetAttachmentResponse : Response
+    public class GetAttachmentResponse : BaseResponse
     {
         [DataMember(Name = "item")]
         public JournalAttachmentModel Item { get; set; }

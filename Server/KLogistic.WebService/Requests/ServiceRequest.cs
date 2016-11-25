@@ -4,10 +4,13 @@ using System.Runtime.Serialization;
 namespace KLogistic.WebService
 {
     [DataContract]
-    public class ServiceRequest : Request
+    public class ServiceRequest : BaseRequest
     {
         [DataMember]
         public string UserName { get; set; }
+
+        [DataMember]
+        public string Password { get; set; }
 
         [DataMember]
         public long? DriverId { get; set; }
@@ -24,8 +27,11 @@ namespace KLogistic.WebService
         [DataMember]
         public string Address { get; set; }
 
+        //[DataMember]
+        //public DateTime? DobTS { get; set; }
+
         [DataMember]
-        public DateTime? Dob { get; set; }
+        public string Dob { get; set; }
 
         [DataMember]
         public string Phone { get; set; }
@@ -46,10 +52,10 @@ namespace KLogistic.WebService
         public string IssuedPlace { get; set; }
 
         [DataMember]
-        public DateTime? ExpiredDate { get; set; }
+        public string ExpiredDate { get; set; }
 
         [DataMember]
-        public DateTime? IssuedDate { get; set; }
+        public string IssuedDate { get; set; }
 
         [DataMember]
         public long? JournalId { get; set; }
@@ -97,7 +103,7 @@ namespace KLogistic.WebService
         public double? EndLng { get; set; }
 
         [DataMember]
-        public DateTime? ActiveDate { get; set; }
+        public string ActiveDate { get; set; }
 
         [DataMember]
         public string ExtendedData { get; set; }
@@ -127,6 +133,12 @@ namespace KLogistic.WebService
         public long? UserId { get; set; }
 
         [DataMember]
-        public long? Role { get; set; }
+        public int? Role { get; set; }
+
+        [DataMember]
+        public long? ActivityId { get; set; }
+
+        [DataMember]
+        public string ActivityMessage { get; set; }
     }
 }

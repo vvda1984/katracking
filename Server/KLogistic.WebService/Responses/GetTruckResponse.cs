@@ -3,7 +3,7 @@
 namespace KLogistic.WebService
 {
     [DataContract]
-    public class GetTruckResponse : Response
+    public class GetTruckResponse : BaseResponse
     {
         [DataMember(Name = "item")]
         public TruckModel Item { get; set; }

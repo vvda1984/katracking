@@ -27,8 +27,8 @@ namespace KLogistic.Data
 
         public DateTime LastUpdatedTS { get; set; }
 
-        public virtual Driver Driver { get; set; }
+        //public virtual Driver Driver { get; set; }
 
-        public virtual Journal Journal { get; set; }
+        //public virtual Journal Journal { get; set; }
     }
 }
