@@ -15,6 +15,7 @@ namespace KLogistic.Data
         //}
 
         [Key, Column("ActivityId")]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public long Id { get; set; }
 
         [Required]

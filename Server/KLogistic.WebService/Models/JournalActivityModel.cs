@@ -1,5 +1,4 @@
 ﻿using KLogistic.Data;
-using System;
 using System.Runtime.Serialization;
 
 namespace KLogistic.WebService
@@ -19,6 +18,9 @@ namespace KLogistic.WebService
         [DataMember(Name = "activityId")]
         public long ActivityId { get; set; }
 
+        [DataMember(Name = "activityName")]
+        public string ActivityName { get; set; }
+
         [DataMember(Name = "activityDetail")]
         public string ActivityDetail { get; set; }
 
@@ -26,7 +28,7 @@ namespace KLogistic.WebService
         public string ExtendedData { get; set; }
 
         [DataMember(Name = "driver")]
-        public DriverModel Driver { get; set; }
+        public UserModel Driver { get; set; }
 
         [DataMember(Name = "activity")]
         public ActivityModel Activity { get; set; }
@@ -39,12 +41,13 @@ namespace KLogistic.WebService
             JournalId = item.JournalId;
             DriverId = item.UserId;
             ActivityId = item.ActivityId;
+            ActivityName = item.Activity.Name;
             ActivityDetail = item.ActivityDetail;
             ExtendedData = item.ExtendedData;
             CreatedTS = item.CreatedTS;
             LastUpdatedTS = item.LastUpdatedTS;
             Activity = new ActivityModel(item.Activity);
-            Driver = new DriverModel(item.Driver);
+            Driver = new UserModel(item.User);
         }
     }
 }

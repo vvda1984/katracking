@@ -35,6 +35,12 @@ namespace KLogistic.WebService
         [DataMember(Name = "activeDate")]
         public DateTime ActiveDate { get; set; }
 
+        [DataMember(Name = "totalDistance")]
+        public double TotalDistance { get; set; }
+
+        [DataMember(Name = "totalDuration")]
+        public double TotalDuration { get; set; }
+
         [DataMember(Name = "status")]
         public int Status { get; set; }
 

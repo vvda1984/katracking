@@ -1,26 +1,59 @@
-﻿<ion-view view-title="Journal View">
-    <ion-nav-bar class="bar-positive">
+﻿<ion-view view-title="{{jvc.R.Journal}}">
+    <!--<ion-nav-bar class="bar-positive">
         <ion-nav-back-button>
         </ion-nav-back-button>
-    </ion-nav-bar>
-    <ion-content overflow-scroll="false">
-        <div class="list">
+    </ion-nav-bar>-->
+    <div class="bar bar-header bar-positive">
+        <button class="button button-icon icon ion-ios-arrow-left" ng-click="jvc.goBack()"></button>
+        <div class="h1 title">{{jvc.R.Journal}}</div>
+    </div>
+    <ion-content ng-class="jvc.allowStartJournal ? 'has-header has-footer' : 'has-header'" overflow-scroll="false">
+        <div id="journalViewMap" data-tap-disabled="true" style="height:300px;width:100%;background:yellow;">            
+        </div>
+        <div class="list">            
+            <!--<div class="item item-divider item-icon-left item-balanced">
+                <i class="icon ion-information-circled"></i>{{jvc.R.JournalInfo}}
+            </div>-->
             <label class="item item-input">
-                <span class="input-label">Name</span>
-                <span class="input-label">{{jvc.journal.name}}</span>                
+                <span class="input-label">Hành Trình</span>
+                <span class="input-label" style="white-space:normal;">{{jvc.journal.name}}</span>                
             </label>
-            <label class="item item-input">
-                <span class="input-label">Description</span>
+            <label class="item  item-input">
+                <span class="input-label">Mô Tả</span>
                 <span class="input-label" style="white-space:normal;">{{jvc.journal.description}}</span>                
             </label>
             <label class="item item-input">
-                <span class="input-label">Start Location</span>                
-                <input type="text" readonly ng-model="jvc.journal.endLocation">
+                <span class="input-label">Từ</span>                
+                <span class="input-label" style="white-space:normal;">{{jvc.journal.startLocation}}</span>                
             </label>
             <label class="item item-input">
-                <span class="input-label">End Location</span>
-                <span class="input-label">{{jvc.journal.endLocation}}</span>                
+                <span class="input-label">Đến</span>
+                <span class="input-label" style="white-space:normal;">{{jvc.journal.endLocation}}</span>                
             </label>
+            <label class="item item-input">
+                <span class="input-label">Ngày</span>
+                <span class="input-label" >{{jvc.journal.activeDate}}</span>
+            </label>
+            <label class="item item-input">
+                <span class="input-label">Khoảng Cách</span>
+                <span class="input-label" id="distance"></span>
+            </label>
+            <label class="item item-input">
+                <span class="input-label">Thời Gian</span>
+                <span class="input-label" id="duration"></span>
+            </label>
+
+            <div class="item item-divider item-icon-left item-balanced">
+                <i class="icon ion-location"></i>{{jvc.R.StopLocations}}
+            </div>
+            <label class="item item-input" ng-repeat="s in jvc.journal.stopPoints">
+                <span class="input-label">{{s.name}}</span>
+                <span class="input-label" style="white-space:normal;">{{s.description}}</span>               
+            </label>          
         </div>
     </ion-content>   
+
+    <div class="bar bar-footer bar-positive" ng-click="jvc.startJournal()" ng-show="jvc.allowStartJournal">
+        <div class="title">{{jvc.R.PickUpJournal}}</div>
+    </div>
 </ion-view>

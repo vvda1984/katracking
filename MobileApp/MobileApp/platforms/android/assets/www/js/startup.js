@@ -10,6 +10,12 @@ var KConfig = (function () {
         this.pingInterval = 3;
         this.requestTimeout = 30;
         this.enableMap = true;
+        this.mapZoom = 17;
+        this.acceptedAccuracy = 100;
+        this.acceptedDistance = 30;
+        this.getLocationInternal = 30;
+        this.enableGoogleService = true;
+        this.syncInterval = 5 * 60;
     }
     KConfig.prototype.updateBaseURL = function () {
         var host = this.ipAddress;
@@ -108,6 +114,44 @@ var KUtils = (function () {
             return null;
         }
     };
+    KUtils.prototype.randomColor = function () {
+        return '#' + Math.random().toString(16).slice(2, 8).toUpperCase();
+    };
+    KUtils.prototype.getCurrentDate = function () {
+        var today = new Date();
+        var t = today.getDate();
+        var dd = t < 10 ? "0" + t.toString() : t.toString();
+        t = today.getMonth() + 1;
+        var mm = t < 10 ? "0" + t.toString() : t.toString();
+        var yyyy = today.getFullYear().toString();
+        return yyyy + "-" + mm + "-" + dd;
+    };
+    KUtils.prototype.getCurrentDateTime = function () {
+        var today = new Date();
+        var t = today.getDate();
+        var day = t < 10 ? "0" + t.toString() : t.toString();
+        t = today.getMonth() + 1;
+        var month = t < 10 ? "0" + t.toString() : t.toString();
+        var year = today.getFullYear().toString();
+        t = today.getHours();
+        var hour = t < 10 ? "0" + t.toString() : t.toString();
+        t = today.getMinutes();
+        var min = t < 10 ? "0" + t.toString() : t.toString();
+        t = today.getSeconds();
+        var second = t < 10 ? "0" + t.toString() : t.toString();
+        return year + "-" + month + "-" + day + " " + hour + ":" + min + ":" + second;
+    };
+    KUtils.prototype.getDistance = function (pointA, pointB) {
+        var calculateRad = function (x) { return x * Math.PI / 180; };
+        var R = 6378137; // Earth�s mean radius in meter
+        var dLat = calculateRad(pointA.lat - pointB.lat);
+        var dLong = calculateRad(pointA.lng - pointB.lng);
+        var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(calculateRad(pointB.lat)) * Math.cos(calculateRad(pointA.lat)) *
+            Math.sin(dLong / 2) * Math.sin(dLong / 2);
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        var d = R * c;
+        return Math.round(d * 100) / 100;
+    };
     return KUtils;
 }());
 var KContext = (function () {
@@ -122,6 +166,53 @@ var KContext = (function () {
         this.userContext = { truck: null };
         this.tag = null;
     };
+    KContext.prototype.setJournalGroups = function (journals, callback) {
+        var journalGroups = [];
+        var groupIndex = 1;
+        for (var i = 0; i < journals.length; i++) {
+            var journal = journals[i];
+            var groupName = journal.status == JournalStatus.Started ? R.Running : journal.activeDate.replace(" 00:00:00", "");
+            var foundGround = null;
+            for (var j = 0; j < journalGroups.length; j++) {
+                var group = journalGroups[j];
+                if (group.name === groupName) {
+                    foundGround = group;
+                    break;
+                }
+            }
+            if (foundGround === null) {
+                foundGround = {
+                    id: groupIndex++,
+                    name: groupName,
+                    isCurrent: journal.status == JournalStatus.Started,
+                    journals: []
+                };
+                journalGroups.push(foundGround);
+                if (foundGround.isCurrent)
+                    this._startedGroup = foundGround;
+            }
+            foundGround.journals.push(journal);
+        }
+        this._journalGroups = journalGroups;
+        callback();
+    };
+    KContext.prototype.getJournalGroups = function () {
+        return this._journalGroups;
+    };
+    KContext.prototype.hasStartedJournal = function () {
+        return this._startedGroup != null && this._startedGroup.journals.length > 0;
+        //let len = this._journalGroups.length;
+        //for (let i = 0; i < len; i++) {
+        //    let group = this._journalGroups[i];
+        //    if (group.isCurrent) {
+        //        return group.journals.length > 0;
+        //    }
+        //}
+        //return false;
+    };
+    KContext.prototype.getTruckId = function () {
+        return (this.userContext != null && this.userContext.truck != null) ? this.userContext.truck.id : 0;
+    };
     return KContext;
 }());
 var KParamter = (function () {
@@ -131,13 +222,14 @@ var KParamter = (function () {
         this.truck = null;
         this.journal = null;
         this.allowBack = false;
+        this.allowStartJournal = false;
         this.nextState = null;
     };
     return KParamter;
 }());
 var KNetwork = (function () {
     function KNetwork() {
-        this._isServerConnected = false;
+        this._isServerConnected = true;
         this._enablePing = false;
     }
     KNetwork.prototype.isReady = function () {
@@ -225,7 +317,7 @@ var KNetwork = (function () {
             });
         }
         else {
-            callback({ errorMessage: "Kh�ng c� k?t n?i internet!" });
+            callback({ errorMessage: R.CannotConnectToServer });
         }
     };
     KNetwork.prototype.ajaxPost = function (method, body, callback) {
@@ -262,7 +354,478 @@ var KNetwork = (function () {
             callback({ errorMessage: "Kh�ng c� k?t n?i internet!" });
         }
     };
+    KNetwork.prototype.getJournals = function (http, ionicLoading, ionicPopup, callback) {
+        ionicLoading.show({ template: R.Loading, noBackdrop: false, });
+        if (app.network.isReady()) {
+            app.network.post(http, "getDriverJournals", { token: app.context.token, driverId: app.context.user.id }, function (result) {
+                ionicLoading.hide();
+                if (app.utils.isEmpty(result.errorMessage)) {
+                    app.context.setJournalGroups(result.data.items, callback);
+                }
+                else {
+                    ionicPopup.alert({ title: R.Error, template: result.errorMessage, });
+                }
+            });
+        }
+        else {
+            app.db.getJournals(function (result) {
+                ionicLoading.hide();
+                var journals = [];
+                for (var i = 0; i < result.rows.length; i++) {
+                    journals.push(JSON.parse(result.rows.item(i).value));
+                }
+                app.context.setJournalGroups(journals, callback);
+            });
+        }
+    };
+    KNetwork.prototype.submitActivity = function (http, request, important, callback) {
+        var n = this;
+        var sycnStatus = SyncStatus.Unsync;
+        var errorMessage = null;
+        var insertDbAction = function (r, s, c) {
+            app.db.addActivity(request, sycnStatus, function (result) {
+                callback(errorMessage);
+            });
+        };
+        if (n.isReady()) {
+            n.post(http, "addJournalActivity", request, function (response) {
+                if (!app.utils.isEmpty(response.errorMessage)) {
+                    if (important) {
+                        callback(R.CannotConnectToServer);
+                    }
+                    else {
+                        insertDbAction(request, sycnStatus, callback);
+                    }
+                }
+                else {
+                    sycnStatus = SyncStatus.Sync;
+                    insertDbAction(request, sycnStatus, callback);
+                }
+            });
+        }
+        else {
+            if (important)
+                callback(R.NoNetwork);
+            else
+                insertDbAction(request, sycnStatus, callback);
+        }
+    };
+    KNetwork.prototype.submitLocation = function (http, request, important, callback) {
+        var n = this;
+        var sycnStatus = SyncStatus.Unsync;
+        var errorMessage = null;
+        var insertDbAction = function (r, s, c) {
+            app.db.addLocation(r, s, function (dbresult) {
+                c(errorMessage);
+            });
+        };
+        if (n.isReady()) {
+            app.network.post(http, "addJournalLocation", request, function (response) {
+                if (!app.utils.isEmpty(response.errorMessage)) {
+                    if (important) {
+                        callback(R.CannotConnectToServer);
+                    }
+                    else {
+                        insertDbAction(request, sycnStatus, callback);
+                    }
+                }
+                else {
+                    sycnStatus = SyncStatus.Sync;
+                    insertDbAction(request, sycnStatus, callback);
+                }
+            });
+        }
+        else {
+            if (important)
+                callback(R.NoNetwork);
+            else
+                insertDbAction(request, sycnStatus, callback);
+        }
+    };
+    KNetwork.prototype.syncData = function (http, callback) {
+        var n = this;
+        if (n.isReady()) {
+            var data_1 = {
+                token: app.context.token,
+                activities: [],
+                locations: [],
+            };
+            var activityIds_1 = new Array();
+            var locationIds_1 = new Array();
+            var submitAction_1 = function (h, d, ar, lr, c) {
+                if (d.activities.length === 0 && d.locations.length === 0) {
+                    c(null);
+                    return;
+                }
+                n.post(h, "syncJournal", d, function (r) {
+                    if (app.utils.isEmpty(r.errorMessage)) {
+                        app.db.updateActivitiesStatus(ar, SyncStatus.Sync, function (dbr) {
+                            if (app.utils.isEmpty(dbr.errorMessage)) {
+                                app.db.updateLocationsStatus(lr, SyncStatus.Sync, function (dbr) {
+                                    if (app.utils.isEmpty(dbr.errorMessage)) {
+                                        c(null);
+                                    }
+                                    else {
+                                        c(dbr.errorMessage);
+                                    }
+                                });
+                            }
+                            else {
+                                c(dbr.errorMessage);
+                            }
+                        });
+                    }
+                    else {
+                        c(r.errorMessage);
+                    }
+                });
+            };
+            app.db.getActivities(SyncStatus.Unsync, function (ar) {
+                if (!app.utils.isEmpty(ar.errorMessage)) {
+                    callback(ar.errorMessage);
+                }
+                else {
+                    for (var i = 0; i < ar.rows.length; i++) {
+                        var item = ar.rows.item(i);
+                        var activity = JSON.parse(item.value);
+                        ;
+                        activityIds_1.push(item.id);
+                        data_1.activities.push(activity);
+                    }
+                    app.db.getLocations(SyncStatus.Unsync, function (jr) {
+                        if (!app.utils.isEmpty(jr.errorMessage)) {
+                            callback(ar.errorMessage);
+                        }
+                        else {
+                            for (var i = 0; i < jr.rows.length; i++) {
+                                var item = jr.rows.item(i);
+                                var location_1 = JSON.parse(item.value);
+                                ;
+                                locationIds_1.push(item.id);
+                                data_1.locations.push(location_1);
+                            }
+                            submitAction_1(http, data_1, activityIds_1, locationIds_1, callback);
+                        }
+                    });
+                }
+            });
+        }
+        else {
+            callback(R.NoNetwork);
+        }
+    };
+    KNetwork.prototype._startSyncTimer = function () {
+        var n = this;
+        n._curentTimer = setTimeout(function () {
+            if (n._syncJournalAction !== null) {
+                var queueNextSync_1 = function () {
+                    if (n._syncJournalAction !== null)
+                        n._startSyncTimer();
+                };
+                if (n.isReady()) {
+                    var data_2 = {
+                        token: app.context.token,
+                        activities: [],
+                        locations: [],
+                    };
+                    var activityIds_2 = new Array();
+                    var locationIds_2 = new Array();
+                    var submitAction_2 = function (d, ar, lr) {
+                        if (d.activities.length === 0 && d.locations.length === 0) {
+                            queueNextSync_1();
+                            return;
+                        }
+                        n._syncJournalAction(d, function (errorMessage) {
+                            app.log.error(errorMessage);
+                            if (app.utils.isEmpty(errorMessage)) {
+                                app.db.updateActivitiesStatus(ar, SyncStatus.Sync, function (dbr) {
+                                    if (app.utils.isEmpty(dbr.errorMessage)) {
+                                        app.db.updateLocationsStatus(lr, SyncStatus.Sync, function (dbr) {
+                                            if (!app.utils.isEmpty(dbr.errorMessage)) {
+                                                app.log.error(dbr.errorMessage);
+                                            }
+                                            queueNextSync_1();
+                                        });
+                                    }
+                                    else {
+                                        app.log.error(dbr.errorMessage);
+                                        queueNextSync_1();
+                                    }
+                                });
+                            }
+                            else
+                                queueNextSync_1();
+                        });
+                    };
+                    app.db.getActivities(SyncStatus.Unsync, function (ar) {
+                        if (!app.utils.isEmpty(ar.errorMessage)) {
+                            queueNextSync_1();
+                        }
+                        else {
+                            for (var i = 0; i < ar.rows.length; i++) {
+                                var item = ar.rows.item(i);
+                                var activity = JSON.parse(item.value);
+                                ;
+                                activityIds_2.push(item.id);
+                                data_2.activities.push(activity);
+                            }
+                            app.db.getLocations(SyncStatus.Unsync, function (jr) {
+                                if (!app.utils.isEmpty(jr.errorMessage)) {
+                                    queueNextSync_1();
+                                }
+                                else {
+                                    for (var i = 0; i < jr.rows.length; i++) {
+                                        var item = jr.rows.item(i);
+                                        var location_2 = JSON.parse(item.value);
+                                        ;
+                                        locationIds_2.push(item.id);
+                                        data_2.locations.push(location_2);
+                                    }
+                                    if (n._syncJournalAction !== null)
+                                        submitAction_2(data_2, activityIds_2, locationIds_2);
+                                }
+                            });
+                        }
+                    });
+                }
+                else {
+                    n._startSyncTimer();
+                }
+            }
+        }, app.config.getLocationInternal * 1000);
+    };
+    KNetwork.prototype.startSync = function (syncJournalAction) {
+        this._syncJournalAction = syncJournalAction;
+        this._startSyncTimer();
+    };
+    KNetwork.prototype.stopSync = function () {
+        this._syncJournalAction = null;
+        if (this._curentTimer !== undefined && this._curentTimer !== null) {
+            clearTimeout(this._curentTimer);
+        }
+    };
     return KNetwork;
+}());
+var KMap = (function () {
+    function KMap() {
+    }
+    KMap.prototype.createMap = function (elementId) {
+        return new google.maps.Map(document.getElementById(elementId), {
+            zoom: app.config.mapZoom,
+            //center: { lat: curlat, lng: curlng },
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            zoomControl: false,
+            //zoomControlOptions: {
+            //    position: google.maps.ControlPosition.RIGHT_BOTTOM
+            //},
+            mapTypeControl: false,
+            //mapTypeControlOptions: {
+            //    style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+            //    position: google.maps.ControlPosition.BOTTOM_LEFT //BOTTOM_CENTER
+            //},
+            scaleControl: false,
+            streetViewControl: false,
+        });
+    };
+    KMap.prototype.addCurrentLocation = function (map, inoicPopup) {
+        var km = this;
+        var btn = document.createElement("div");
+        btn.className = "item";
+        btn.style.padding = "0px";
+        btn.style.borderRadius = "16px";
+        btn.style.marginRight = "4px";
+        btn.style.width = "32px";
+        btn.style.height = "32px";
+        btn.style.textAlign = "center";
+        var i = document.createElement("img");
+        i.src = "img/cur-location.png";
+        i.style.width = "28px";
+        i.style.height = "28px";
+        i.style.marginTop = "2px";
+        btn.appendChild(i);
+        //var btn = document.createElement("i");
+        //btn.className = "icon ion-android-locate";
+        //btn.style.width = "32px";
+        //btn.style.height = "32px";
+        //btn.style.marginRight = "4px";
+        btn.addEventListener("click", function () {
+            if (km.curLat === undefined || km.curLat === 0) {
+                km.getCurrentLocation(function (response) {
+                    if (app.utils.isEmpty(response.errorMessage)) {
+                        map.setCenter({ lat: km.curLat, lng: km.curLng });
+                    }
+                    else {
+                        inoicPopup.alert({ title: R.Error, template: response.errorMessage, });
+                    }
+                });
+            }
+            else {
+                map.setCenter({ lat: km.curLat, lng: km.curLng });
+            }
+        });
+        map.controls[google.maps.ControlPosition.RIGHT_TOP].push(btn);
+        var point = new google.maps.LatLng(this.curLat, this.curLng);
+        var cradius = (this.curAcc > 500) ? 500 : this.curAcc;
+        this.curLocationMarker = this.addMarker(map, point, null, "marker-truck.png");
+        this.curAccCircle = new google.maps.Circle({
+            center: point,
+            radius: cradius,
+            map: map,
+            fillColor: '#2196F3',
+            fillOpacity: 0.2,
+            strokeOpacity: 0,
+        });
+    };
+    KMap.prototype.addMarkerInLatLng = function (map, lat, lng, title, iconName) {
+        var iconUrl = "img/" + iconName;
+        var marker = new google.maps.Marker();
+        marker.setPosition(new google.maps.LatLng(lat, lng));
+        marker.setMap(map);
+        marker.setIcon(iconUrl);
+        if (title !== null) {
+            marker.setTitle(title);
+            marker.addListener("click", function () {
+                var infoWindow = new google.maps.InfoWindow();
+                infoWindow.setContent(title);
+                infoWindow.open(map, marker);
+            });
+        }
+        return marker;
+    };
+    KMap.prototype.addMarker = function (map, point, title, iconName) {
+        var iconUrl = "img/" + iconName;
+        var marker = new google.maps.Marker();
+        marker.setPosition(point);
+        marker.setMap(map);
+        marker.setIcon(iconUrl);
+        if (title !== null) {
+            marker.setTitle(title);
+            marker.addListener("click", function () {
+                var infoWindow = new google.maps.InfoWindow();
+                infoWindow.setContent(title);
+                infoWindow.open(map, marker);
+            });
+        }
+        return marker;
+    };
+    KMap.prototype.calcRoute = function (directionsDisplay, startPoint, endPoint, callback) {
+        var ms = this;
+        if (ms.directionsService == null)
+            ms.directionsService = new google.maps.DirectionsService();
+        ms.directionsService.route({
+            origin: startPoint,
+            destination: endPoint,
+            travelMode: google.maps.TravelMode.DRIVING
+        }, function (response, status) {
+            if (status == google.maps.DirectionsStatus.OK) {
+                app.log.debug(response);
+                directionsDisplay.setDirections(response);
+                var totalDistance = 0;
+                var totalDuration = 0;
+                var legs = response.routes[0].legs;
+                for (var i = 0; i < legs.length; ++i) {
+                    totalDistance += legs[i].distance.value;
+                    totalDuration += legs[i].duration.value;
+                }
+                callback(null, totalDistance, totalDuration);
+            }
+            else {
+                callback(R.GoogleAPIError + status, 0, 0);
+            }
+        });
+    };
+    KMap.prototype.getAddress = function (point, callback) {
+        var geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ location: point, region: "vi" }, function (results, status) {
+            if (status == google.maps.GeocoderStatus.OK) {
+                app.log.debug(results);
+                if (results[1]) {
+                    callback(results[1].formatted_address);
+                }
+                else {
+                    callback(null);
+                }
+            }
+            else {
+                app.log.error(R.GoogleAPIError + status);
+                callback(null);
+            }
+        });
+    };
+    KMap.prototype.initialize = function () {
+        //this.directionsService = new google.maps.DirectionsService();
+    };
+    KMap.prototype.getCurrentLocation = function (callback) {
+        var m = this;
+        try {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                var lat = position.coords.latitude;
+                var lng = position.coords.longitude;
+                var acc = position.coords.accuracy;
+                m.curLat = lat;
+                m.curLng = lng;
+                m.curAcc = acc;
+                if (m.curLocationMarker !== null) {
+                    m.curLocationMarker.setPosition({ lat: lat, lng: lng });
+                    if (m.curAccCircle !== null) {
+                        m.curAccCircle.setRadius(acc > 500 ? 500 : acc);
+                        m.curAccCircle.setCenter({ lat: lat, lng: lng });
+                    }
+                }
+                callback({ lat: lat, lng: lng, acc: acc });
+            }, function (err) {
+                if (err.PERMISSION_DENIED) {
+                    callback({ errorMessage: R.NoGPSPermission });
+                }
+                else if (err.TIMEOUT) {
+                    callback({ errorMessage: R.Timeout });
+                }
+                else if (err.POSITION_UNAVAILABLE) {
+                    callback({ errorMessage: R.CannotGetLocation });
+                }
+                else {
+                    callback({ errorMessage: err.message + ": " + err.code.toString() });
+                }
+            }, { maximumAge: 30000, timeout: 5000, enableHighAccuracy: true });
+        }
+        catch (err) {
+            callback({ errorMessage: err.message });
+        }
+    };
+    KMap.prototype._startGetLocationTimer = function () {
+        var _this = this;
+        _this._curentTimer = setTimeout(function () {
+            if (_this._submitLocation !== null) {
+                _this.getCurrentLocation(function (response) {
+                    _this._submitLocation(response.errorMessage, {
+                        token: app.context.token,
+                        createdTS: app.utils.getCurrentDateTime(),
+                        stopCount: 0,
+                        latitude: response.lat,
+                        longitude: response.lng,
+                        accuracy: response.acc,
+                        journalId: app.paramters.journal.id,
+                        driverId: app.context.user.id,
+                        truckId: app.context.userContext.truck.id,
+                    }, function () {
+                        if (_this._submitLocation !== null)
+                            _this._startGetLocationTimer();
+                    });
+                });
+            }
+        }, app.config.getLocationInternal * 1000);
+    };
+    KMap.prototype.startWatcher = function (submit) {
+        this._submitLocation = submit;
+        this._startGetLocationTimer();
+    };
+    KMap.prototype.stopWatcher = function () {
+        this._submitLocation = null;
+        if (this._curentTimer !== undefined && this._curentTimer !== null) {
+            clearTimeout(this._curentTimer);
+        }
+    };
+    return KMap;
 }());
 //***********************************************************
 var kapp = new (function () {
@@ -274,6 +837,7 @@ var kapp = new (function () {
         this.network = new KNetwork();
         this.db = new LocalStorageDB();
         this.context = new KContext();
+        this.map = new KMap;
         this.paramters = new KParamter();
     }
     return KApp;

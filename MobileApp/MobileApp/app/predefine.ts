@@ -64,11 +64,21 @@ class KeyedCollection<T> implements IKeyedCollection<T> {
 
 interface IDatabaseAPI {
     initialize(callback): void;
+    initializeForUser(callback: (result: IQueryResult) => any): void;
     getSettings(callback): void;
     saveSettings(settings: Array<any>, callback): void;
     getUserContext(userId: number, callback: (result: IQueryResult) => any): void;
     saveUserContext(userId: number, userName: string, value: string, callback: (result: IQueryResult) => any): void;
+    getJournals(callback: (result: IQueryResult) => any): void;
+    addActivity(activity: IJournalActivity, syncStatus: SyncStatus, callback: (result: IQueryResult) => any): void;
+    getActivities(syncStatus: SyncStatus, callback: (result: IQueryResult) => any): void;
+    updateActivitiesStatus(ids: Array<number>, syncStatus: SyncStatus, callback: (result: IQueryResult) => any): void;
+    getJournalActivities(journalId: number, callback: (result: IQueryResult) => any): void;
+    addLocation(location: IJournalLocation, syncStatus: SyncStatus, callback: (result: IQueryResult) => any): void;
+    getLocations(syncStatus: number, callback: (result: IQueryResult) => any): void;
+    updateLocationsStatus(ids: Array<number>, syncStatus: SyncStatus, callback: (result: IQueryResult) => any): void;
 }
+
 
 interface IQueryResult {
     errorMessage?: string;
@@ -130,4 +140,132 @@ enum LogSeverity {
 enum ResponseStatus {
     Error = -1,
     Success = 0,
+}
+
+enum SyncStatus {
+    Sync = 0,
+    Unsync = 1,    
+}
+
+var predefinedActions = [
+    {
+        id: 1,
+        name: "Bắt Đầu",
+        description: "",
+    },
+    {
+        id: 2,
+        name: "Đến Điểm Nhận Hàng",
+        description: "",
+    },
+    {
+        id: 3,
+        name: "Xuất Phát",
+        description: "",
+    },
+    {
+        id: 4,
+        name: "Tắc Đường",
+        description: "",
+    },
+    {
+        id: 5,
+        name: "Xe Hỏng",
+        description: "",
+    },
+    {
+        id: 6,
+        name: "Đến Điểm Trả Hàng",
+        description: "",
+    },
+    {
+        id: 7,
+        name: "Bắt Đầu Trả Hàng",
+        description: "",
+    },
+    {
+        id: 8,
+        name: "Kết Thúc Trả Hàng",
+        description: "",
+    },
+    {
+        id: 9,
+        name: "Gửi Thông Báo",
+        description: "",
+    },
+    {
+        id: 10,
+        name: "Thoát Hành Trình",
+        description: "",
+    },
+    {
+        id: 11,
+        name: "Trở Lại Hành Trình",
+        description: "",
+    },
+    {
+        id: 12,
+        name: "Kết Thúc",
+        description: "",
+    },
+];
+
+enum JournalStatus {
+    Actived = 0,
+    Started = 2,
+    Completed = 3,
+    Deleted = 4,
+    Cancelled = 5,
+}
+
+enum JournalActivity {
+    BatDauHanhTrinh = 1,
+    DenDiemNhanHang = 2,
+    XuatPhat = 3,
+    TacDuong = 4,
+    XeHong = 5,
+    DenDienTraHang = 6,
+    BatDauTraHang = 7,
+    KetThucTraHang = 8,
+    GuiThongBao = 9,
+    ThoatHanhTrinh = 10,
+    KetThucHanhTrinh = 11,
+    TroLaiHanhTrinh = 12,
+}
+
+interface IJournalActivity {
+    activityId: number;
+    journalId: number;
+    driverId: number;
+    truckId: number;
+    activityDetail: string;   
+    activityName: string;
+    createdTS: string;    
+    extendedData: string;
+    token?: string;    
+}
+
+interface IJournalLocation {
+    journalId: number;
+    driverId: number;
+    truckId: number;
+    latitude: number;
+    longitude: number;
+    accuracy: number;
+    createdTS: string;
+    stopCount?: number;    
+    token?: string;    
+}
+
+interface IPoint {
+    lat: number;
+    lng: number;
+    acc?: number;
+}
+
+interface IGetLocationResponse {
+    errorMessage?: string,
+    lat?: number;
+    lng?: number;
+    acc?: number;
 }

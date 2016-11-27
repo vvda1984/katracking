@@ -102,33 +102,44 @@ namespace KLogistic.WebService
                 string issuedDate = request.IssuedDate;
                 int? status = request.Status;
 
-                var user = db.GetUser(username);
-                if (user != null)
+                var existingUser = db.GetUser(username);
+                if (existingUser != null)
                     throw new KException($"Driver {username} existed!");
 
-                var driver = new Driver();
-                driver.Username = username;
-                driver.Password = Utils.HashPassword(password);
-                driver.FirstName = firstName;
-                driver.LastName = lastName;
-                driver.SSN = ssn;
-                driver.Address = address;
-                driver.DOB = DateTime.ParseExact(request.Dob, "yyyy-MM-dd", null);//request.Dob?? request.Dob.Value;
-                driver.Phone = phone;
-                driver.Email = email;
-                driver.Note = note;
-                driver.Role = UserRole.Driver;
-                driver.LicenseNo = licenseNo;
-                driver.ClassType = classType;
-                driver.IssuedPlace = issuedPlace;
-                driver.ExpiredDate = DateTime.ParseExact(request.ExpiredDate, "yyyy-MM-dd", null);
-                driver.IssuedDate = DateTime.ParseExact(request.IssuedDate, "yyyy-MM-dd", null);
-                driver.LastUpdatedTS = DateTime.Now;
-                driver.CreatedTS = DateTime.Now;
-                driver.Status = (status != null) ? (Status)status.Value : Status.Actived;
+                var driver = new Driver()
+                {
+                    Username = username,
+                    Password = Utils.HashPassword(password),
+                    FirstName = firstName,
+                    LastName = lastName,
+                    SSN = ssn,
+                    Address = address,
+                    DOB = DateTime.ParseExact(request.Dob, "yyyy-MM-dd", null),//request.Dob?? request.Dob.Value;
+                    Phone = phone,
+                    Email = email,
+                    Note = note,
+                    Role = UserRole.Driver,
+                    LastUpdatedTS = DateTime.Now,
+                    CreatedTS = DateTime.Now,
+                    Status = (status != null) ? (Status)status.Value : Status.Actived,
+                    LicenseNo = licenseNo,
+                    ClassType = classType,
+                    IssuedPlace = issuedPlace,
+                    ExpiredDate = DateTime.ParseExact(request.ExpiredDate, "yyyy-MM-dd", null),
+                    IssuedDate = DateTime.ParseExact(request.IssuedDate, "yyyy-MM-dd", null),
+                };
+                driver.Validate();
+                //db.DBModel.Drivers.Add(driver);
 
-                db.AddDriver(driver);
+                //var driver = new Driver();
+                //driver.User = user;
+                //driver.LicenseNo = licenseNo;
+                //driver.ClassType = classType;
+                //driver.IssuedPlace = issuedPlace;
+                //driver.ExpiredDate = DateTime.ParseExact(request.ExpiredDate, "yyyy-MM-dd", null);
+                //driver.IssuedDate = DateTime.ParseExact(request.IssuedDate, "yyyy-MM-dd", null);
 
+                db.DBModel.Drivers.Add(driver);
                 db.SaveChanges();
                 resp.Item = new DriverModel(driver);
             }, false);
@@ -184,16 +195,18 @@ namespace KLogistic.WebService
                 ValidateParam(request.DriverId);
                 long driverId = request.DriverId.Value;
 
-                var user = db.GetDriver(driverId);
-                if (user == null)
+                var driver = db.GetDriver(driverId);
+                if (driver == null)
                     throw new KException("Driver is not found");
 
-                if (user.Status == Status.Inactived)
-                    db.RemoveUser(user);
+                if (driver.Status == Status.Inactived)
+                {
+                    db.DBModel.Drivers.Remove(driver);
+                }
                 else
                 {
-                    user.Status = Status.Deleted;
-                    user.LastUpdatedTS = DateTime.Now;
+                    driver.Status = Status.Deleted;
+                    driver.LastUpdatedTS = DateTime.Now;
                 }
 
             }, false);

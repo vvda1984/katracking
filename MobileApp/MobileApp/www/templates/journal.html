@@ -1,9 +1,102 @@
-﻿<!DOCTYPE html>
-<html>
-<head>
-    <title></title>
-</head>
-<body>
-    <div>Content goes here.</div>
-</body>
-</html>
+﻿<ion-view view-title="{{jc.R.Journal}}">
+    <div class="bar bar-header bar-positive">
+        <div class="h1 title">{{jc.R.Journal}}</div>
+        <button class="button" ng-click="jc.existJournal()">Thoát</button>
+    </div>
+    <ion-content class="padding has-header" overflow-scroll="false">
+        <!--<div id="journalMap" data-tap-disabled="true" style="height:300px;width:100%;">
+        </div>-->
+        <div class="list">
+            <!--<div class="center-parent" style="padding:8px;background:#387EF5;">
+                <h3 id="journalMessage" style="color:#fff;">This is test message....</h3>
+            </div>-->
+
+            <label class="item item-input">
+                <span class="input-label">Từ</span>
+                <span class="input-label">{{jc.journal.startLocation}}</span>
+            </label>
+
+            <label class="item item-input">
+                <span class="input-label">Đến</span>
+                <span class="input-label">{{jc.journal.endLocation}}</span>
+            </label>
+
+            <div class="item item-button-right" >
+                <span class="input-label">Hiện Tại</span>
+                <p id="currentLocation">Quan 1 ho chi minh</p>
+                <button class="button button-positive"  ng-click="jc.viewCurrentLocation();">
+                    <i class="icon ion-location"></i>
+                </button>
+            </div>
+
+            <!--<div class="item item-icon-left item-icon-right">
+                <i class="icon ion-location"></i><h4 id="currentLocation">Quan 1 ho chi minh</h4>
+            </div>-->
+
+          
+
+            <!--<label class="item item-input">
+                <span class="input-label">Khoảng Cách</span>
+                <span class="input-label" id="distance"></span>
+            </label>
+            <label class="item item-input">
+                <span class="input-label">Thời Gian</span>
+                <span class="input-label" id="duration"></span>
+            </label>-->
+
+            <table style="border:0px;width:100%">
+                <tr>
+                    <td class="center-parent">
+                        <button class="button button-block button-balanced" style="margin-right:4px;" ng-click="jc.startJournal()">Bắt Đầu</button>
+                    </td>
+                    <td class="center-parent">
+                        <button class="button button-block button-assertive" style="margin-left:4px;"  ng-click="jc.endJournal()">Kết Thúc</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="center-parent">
+                        <button class="button button-block button-calm" style="margin-right:4px;" ng-click="jc.doActivity(2)">Nhận Hàng</button>
+                    </td>
+                    <td class="center-parent">
+                        <button class="button button-block button-calm" style="margin-left:4px;" ng-click="jc.doActivity(3)">Xuất Phát</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="center-parent">
+                        <button class="button button-block button-calm" style="margin-right:4px;" ng-click="jc.doActivity(4)">Báo Tắc Đường</button>
+                    </td>
+                    <td class="center-parent">
+                        <button class="button button-block button-calm" style="margin-left:4px;" ng-click="jc.doActivity(5)">Báo Xe Hỏng</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="center-parent">
+                        <button class="button button-block button-calm" style="margin-right:4px;" ng-click="jc.doActivity(6)">Đến Điểm Trả Hàng</button>
+                    </td>
+                    <td class="center-parent">
+                        <button class="button button-block button-calm" style="margin-left:4px;" ng-click="jc.doActivity(7)">Bắt Đầu Trả Hàng</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="center-parent">
+                        <button class="button button-block button-calm" style="margin-right:4px;" ng-click="jc.doActivity(8)">Kết Thúc Trả Hàng</button>
+                    </td>
+                    <td class="center-parent">
+                        <button class="button button-block button-calm" style="margin-left:4px;" ng-click="jc.doActivity(9)">Gửi Thông Báo</button>
+                    </td>
+                </tr>
+            </table>
+
+            <!--<div class="item item-divider" ng-repeat="ar in jc.activities">
+                <span class="input-label">{{a.createdTS}}</span>
+            </div>-->
+            <!--<div class="item item-divider item-icon-left item-balanced">
+                <i class="icon ion-ios-compose-outline"></i>{{jc.R.JournalActivities}}
+            </div>
+            <label class="item-borderless item-input" ng-repeat="a in jc.activities">
+                <span class="input-label">{{a.createdTS}}</span>
+                <span class="input-label">{{a.name}}</span>
+            </label>-->
+        </div>
+    </ion-content>
+</ion-view>

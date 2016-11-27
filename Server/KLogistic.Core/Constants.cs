@@ -19,8 +19,9 @@ namespace KLogistic
         public const long Action_BatDauTraHang = 7;
         public const long Action_KetThucTraHang = 8;
         public const long Action_GuiThongBao = 9;
-        public const long Action_TraHanhTrinh = 10;
-        public const long Action_KetThucHanhTrinh = 100; 
+        public const long Action_ThoatHanhTrinh = 10;
+        public const long Action_KetThucHanhTrinh = 11;
+        public const long Action_TroLaiHanhTrinh = 12;
     }
 
     public class ReturnCode

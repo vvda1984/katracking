@@ -14,14 +14,17 @@ namespace KLogistic.WebService
             if (journalid <= 0)
                 throw new KException("Missing parameter 'journalid'");
 
-            var journal = db.DBModel.Journals.FirstOrDefault(x => x.Id == journalid);
+            var journal = db.DBModel.Journals
+                .Include(x=>x.JournalActivities)
+                .Include(x => x.JournalStopPoints)                
+                .FirstOrDefault(x => x.Id == journalid);
             if (journal == null)
                 throw new KException("Journal is not found");
 
             return journal;
         }
 
-        private void AddJournalLocation(DataContext db, long journalid, long driverid, long truckid, double lat, double lng, double acc)
+        private void AddJournalLocation(DataContext db, long journalId, long driverId, long truckId, double lat, double lng, double acc, DateTime date)
         {           
             bool addNewLocation = true;
             var lastLocation = db.DBModel.JournalLocations.LastOrDefault();
@@ -31,7 +34,7 @@ namespace KLogistic.WebService
                 if (distance < Constants.AcceptedDistance)
                 {
                     lastLocation.StopCount++;
-                    lastLocation.LastUpdatedTS = DateTime.Now;
+                    lastLocation.LastUpdatedTS = date;
                     addNewLocation = false;
                 }
             }
@@ -43,14 +46,79 @@ namespace KLogistic.WebService
                     Accuracy = acc,
                     Latitude = lat,
                     Longitude = lng,
-                    CreatedTS = DateTime.Now,
-                    LastUpdatedTS = DateTime.Now,
-                    DriverId = driverid,
-                    JournalId = journalid,
-                    TruckId = truckid,
+                    CreatedTS = date,
+                    LastUpdatedTS = date,
+                    UserId = driverId,
+                    JournalId = journalId,
+                    TruckId = truckId,
                     StopCount = 0,
                 };
                 db.DBModel.JournalLocations.Add(location);
+            }
+        }
+
+        private void AddJournalActivity(DataContext db, long activityId, string activityMessage, DateTime date, long journalId, long driverId, long truckId)
+        {
+            db.DBModel.JournalActivities.Add(new JournalActivity
+            {
+                ActivityId = activityId,
+                ActivityDetail = activityMessage,
+                CreatedTS = date,
+                LastUpdatedTS = date,
+                UserId = driverId,
+                JournalId = journalId,
+            });
+
+            if (activityId == Constants.Action_KetThucHanhTrinh)
+            {               
+                var journal = db.DBModel.Journals.FirstOrDefault(x => x.Id == journalId);
+                if (journal == null)
+                    throw new KException("Server internal error: journal not found");
+
+                journal.Status = JournalStatus.Completed;
+                var driver = journal.JournalDrivers.FirstOrDefault(x => x.UserId == driverId);
+                if (driver == null)
+                    throw new KException("Server internal error: driver not found");
+
+                driver.Status = JournalDriverStatus.Completed;
+                var truck = db.DBModel.Trucks.FirstOrDefault(x => x.Id == truckId);
+                if (truck == null)
+                    throw new KException("Server internal error: truck not found");
+                truck.Status = TruckStatus.Actived;
+            }
+            else if (activityId == Constants.Action_BatDauHanhTrinh)
+            {
+                var journal = db.DBModel.Journals.FirstOrDefault(x => x.Id == journalId);
+                if (journal == null)
+                    throw new KException("Server internal error: journal not found");
+                journal.Status = JournalStatus.Started;
+
+                var driver = journal.JournalDrivers.FirstOrDefault(x => x.UserId == driverId);
+                if (driver == null)
+                    throw new KException("Server internal error: driver not found");
+                driver.Status = JournalDriverStatus.Started;
+
+                var truck = db.DBModel.Trucks.FirstOrDefault(x => x.Id == truckId);
+                if (truck == null)
+                    throw new KException("Server internal error: truck not found");
+                truck.Status = TruckStatus.Working;
+            }
+            else if (activityId == Constants.Action_ThoatHanhTrinh)
+            {               
+                var journal = db.DBModel.Journals.FirstOrDefault(x => x.Id == journalId);
+                if (journal == null)
+                    throw new KException("Server internal error: journal not found");
+                journal.Status = JournalStatus.Actived;
+
+                var driver = journal.JournalDrivers.FirstOrDefault(x => x.UserId == driverId);
+                if (driver == null)
+                    throw new KException("Server internal error: driver not found");
+                driver.Status = JournalDriverStatus.Actived;
+
+                var truck = db.DBModel.Trucks.FirstOrDefault(x => x.Id == truckId);
+                if (truck == null)
+                    throw new KException("Server internal error: truck not found");
+                truck.Status = TruckStatus.Actived;
             }
         }
 
@@ -81,23 +149,19 @@ namespace KLogistic.WebService
             return Run<ServiceRequest, GetJournalsResponse>(request, (resp, db, session) =>
             {
                 var status = request.Status;
-                var includeActivity = request.IncludeActivity;
-                var includeAttachment = request.IncludeAttachment;
-                var includeStopPoint = request.IncludeStopPoint;
-                var includeDriver = request.IncludeDriver;
-                //int includeLocation = GetHeaderParam("includeLocation", 0);
+                var includeActivity = request.IncludeActivity == null ? false : request.IncludeActivity.Value;
+                var includeAttachment = request.IncludeAttachment == null ? false : request.IncludeAttachment.Value;
+                var includeStopPoint = request.IncludeStopPoint == null ? false : request.IncludeStopPoint.Value;
+                var includeDriver = request.IncludeDriver == null ? false : request.IncludeDriver.Value;
+
 
                 resp.Items = new List<JournalModel>();
                 var query = (status != null) ?
                         db.DBModel.Journals.Where(x => x.Status != JournalStatus.Deleted) :
                         db.DBModel.Journals.Where(x => x.Status == (JournalStatus)status);
                 foreach (var journal in query)
-                    resp.Items.Add(CreateJournalModel(journal,
-                            includeActivity??includeActivity.Value,
-                            includeAttachment ?? includeAttachment.Value,
-                            includeStopPoint ?? includeStopPoint.Value,
-                            includeDriver ?? includeDriver.Value));
-             });
+                    resp.Items.Add(CreateJournalModel(journal, includeActivity, includeAttachment, includeStopPoint, includeDriver));
+            });
         }
 
         public GetJournalResponse GetJournal(ServiceRequest request)
@@ -107,17 +171,14 @@ namespace KLogistic.WebService
                 ValidateParam(request.JournalId);
                 long journalid = request.JournalId.Value;
 
-                var includeActivity = request.IncludeActivity;
-                var includeAttachment = request.IncludeAttachment;
-                var includeStopPoint = request.IncludeStopPoint;
-                var includeDriver = request.IncludeDriver;
+                var includeActivity = request.IncludeActivity == null ? false : request.IncludeActivity.Value;
+                var includeAttachment = request.IncludeAttachment == null ? false : request.IncludeAttachment.Value;
+                var includeStopPoint = request.IncludeStopPoint == null ? false : request.IncludeStopPoint.Value;
+                var includeDriver = request.IncludeDriver == null ? false : request.IncludeDriver.Value;
+
 
                 var journal = GetJournal(db, journalid);
-                resp.item = CreateJournalModel(journal,
-                                includeActivity ?? includeActivity.Value,
-                                includeAttachment ?? includeAttachment.Value,
-                                includeStopPoint ?? includeStopPoint.Value,
-                                includeDriver ?? includeDriver.Value);
+                resp.item = CreateJournalModel(journal, includeActivity, includeAttachment, includeStopPoint, includeDriver);
         });
         }
 
@@ -231,12 +292,12 @@ namespace KLogistic.WebService
                 ValidateParam(request.DriverId);
                 long driverid = request.DriverId.Value;
 
-                var locations = db.DBModel.JournalLocations.Include(x=>x.Driver).Where(x=>x.DriverId == driverid && x.JournalId == journalid).ToList();
+                var locations = db.DBModel.JournalLocations.Include(x=>x.User).Where(x=>x.UserId == driverid && x.JournalId == journalid).ToList();
                 if (locations.Any())
                 {
                     resp.Item = new JourneyModel();
                     resp.Item.Locations = new List<JournalLocationModel>();
-                    resp.Item.Driver = new DriverModel(locations[0].Driver);
+                    resp.Item.Driver = new UserModel(locations[0].User);
                     foreach (var i in locations)
                         resp.Item.Locations.Add(new JournalLocationModel(i));
                 }
@@ -260,7 +321,8 @@ namespace KLogistic.WebService
                 double lng = request.Longitude.Value;
                 double acc = request.Accuracy.Value;
 
-                AddJournalLocation(db, journalid, driverid, truckid, lat, lng, acc);              
+                var date = request.CreatedTS != null ? DateTime.ParseExact(request.CreatedTS, "yyyy-MM-dd HH:mm:ss", null) : DateTime.Now;
+                AddJournalLocation(db, journalid, driverid, truckid, lat, lng, acc, date);   
             });
         }
 
@@ -277,7 +339,7 @@ namespace KLogistic.WebService
                 {                    
                     var journalLocation = truck.JournalLocations.LastOrDefault();
                     var journal = journalLocation.Journal; //.Journals.FirstOrDefault(x => x.Id == journalLocation.JournalId);
-                    var driver = journalLocation.Driver; // db.DBModel.Drivers.FirstOrDefault(x => x.Id == journalLocation.DriverId);
+                    var driver = journalLocation.User; // db.DBModel.Drivers.FirstOrDefault(x => x.Id == journalLocation.DriverId);
                     var item = new JournalTruckModel
                     {
                         LastLat = journalLocation.Latitude,
@@ -325,12 +387,12 @@ namespace KLogistic.WebService
                 ValidateParam(request.TruckId);
                 long truckId = request.TruckId.Value;
 
-                var locations = db.DBModel.JournalLocations.Include(x => x.Driver).Where(x => x.TruckId == truckId && x.JournalId == journalid).ToList();
+                var locations = db.DBModel.JournalLocations.Include(x => x.User).Where(x => x.TruckId == truckId && x.JournalId == journalid).ToList();
                 if (locations.Any())
                 {
                     resp.Item = new JourneyModel();
                     resp.Item.Locations = new List<JournalLocationModel>();
-                    resp.Item.Driver = new DriverModel(locations[0].Driver);
+                    resp.Item.Driver = new UserModel(locations[0].User);
                     foreach (var i in locations)
                         resp.Item.Locations.Add(new JournalLocationModel(i));
                 }
@@ -345,9 +407,9 @@ namespace KLogistic.WebService
                 long truckId = ValidateParamLong(request.TruckId, "truckId");
                 long driverId = ValidateParamLong(request.DriverId, "driverId");
                 
-                var lat = ValidateParamDouble(request.Latitude, "latitude");
-                var lng = ValidateParamDouble(request.Longitude, "longitude");
-                var acc = ValidateParamDouble(request.Accuracy, "accuracy");
+                //var lat = ValidateParamDouble(request.Latitude, "latitude");
+                //var lng = ValidateParamDouble(request.Longitude, "longitude");
+                //var acc = ValidateParamDouble(request.Accuracy, "accuracy");
 
                 var journal = db.DBModel.Journals.FirstOrDefault(x=>x.Id == journalId);
                 if (journal == null)
@@ -367,7 +429,7 @@ namespace KLogistic.WebService
 
                 truck.Status = TruckStatus.Working;
 
-                AddJournalLocation(db, journalId, driverId, truckId, lat, lng, acc);
+                //AddJournalLocation(db, journalId, driverId, truckId, lat, lng, acc);
                 db.DBModel.JournalActivities.Add(new JournalActivity
                 {
                     ActivityId = Constants.Action_BatDauHanhTrinh,
@@ -387,9 +449,9 @@ namespace KLogistic.WebService
                 long truckId = ValidateParamLong(request.TruckId, "truckId");
                 long driverId = ValidateParamLong(request.DriverId, "driverId");
 
-                var lat = ValidateParamDouble(request.Latitude, "latitude");
-                var lng = ValidateParamDouble(request.Longitude, "longitude");
-                var acc = ValidateParamDouble(request.Accuracy, "accuracy");
+                //var lat = ValidateParamDouble(request.Latitude, "latitude");
+                //var lng = ValidateParamDouble(request.Longitude, "longitude");
+                //var acc = ValidateParamDouble(request.Accuracy, "accuracy");
 
                 var journal = db.DBModel.Journals.FirstOrDefault(x => x.Id == journalId);
                 if (journal == null)
@@ -409,7 +471,7 @@ namespace KLogistic.WebService
 
                 truck.Status = TruckStatus.Actived;
 
-                AddJournalLocation(db, journalId, driverId, truckId, lat, lng, acc);
+                //AddJournalLocation(db, journalId, driverId, truckId, lat, lng, acc);
                 db.DBModel.JournalActivities.Add(new JournalActivity
                 {
                     ActivityId = Constants.Action_KetThucHanhTrinh,
@@ -429,9 +491,9 @@ namespace KLogistic.WebService
                 long truckId = ValidateParamLong(request.TruckId, "truckId");
                 long driverId = ValidateParamLong(request.DriverId, "driverId");
 
-                var lat = ValidateParamDouble(request.Latitude, "latitude");
-                var lng = ValidateParamDouble(request.Longitude, "longitude");
-                var acc = ValidateParamDouble(request.Accuracy, "accuracy");
+                //var lat = ValidateParamDouble(request.Latitude, "latitude");
+                //var lng = ValidateParamDouble(request.Longitude, "longitude");
+                //var acc = ValidateParamDouble(request.Accuracy, "accuracy");
 
                 var journal = db.DBModel.Journals.FirstOrDefault(x => x.Id == journalId);
                 if (journal == null)
@@ -451,10 +513,10 @@ namespace KLogistic.WebService
 
                 truck.Status = TruckStatus.Actived;
 
-                AddJournalLocation(db, journalId, driverId, truckId, lat, lng, acc);
+                //AddJournalLocation(db, journalId, driverId, truckId, lat, lng, acc);
                 db.DBModel.JournalActivities.Add(new JournalActivity
                 {
-                    ActivityId = Constants.Action_TraHanhTrinh,
+                    ActivityId = Constants.Action_ThoatHanhTrinh,
                     CreatedTS = DateTime.Now,
                     LastUpdatedTS = DateTime.Now,
                     UserId = driverId,
@@ -478,20 +540,93 @@ namespace KLogistic.WebService
                 long activityId = ValidateParamLong(request.ActivityId, "activityId");
                 var activityMessage = request.ActivityMessage;
 
-                var journal = db.DBModel.Journals.FirstOrDefault(x => x.Id == journalId);
-                if (journal == null)
-                    throw new KException("Server internal error: journal not found");
-              
-                AddJournalLocation(db, journalId, driverId, truckId, lat, lng, acc);
-                db.DBModel.JournalActivities.Add(new JournalActivity
+                var date = request.CreatedTS != null ? DateTime.ParseExact(request.CreatedTS, "yyyy-MM-dd HH:mm:ss", null) : DateTime.Now;
+
+                AddJournalActivity(db, activityId, activityMessage, date, journalId, driverId, truckId);
+                AddJournalLocation(db, journalId, driverId, truckId, lat, lng, acc, date);
+            });
+        }
+
+        public BaseResponse AddJournalActivity(ServiceRequest request)
+        {
+            return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
+            {
+                long journalId = ValidateParamLong(request.JournalId, "journalId");
+                long driverId = ValidateParamLong(request.DriverId, "driverId");                
+                long activityId = ValidateParamLong(request.ActivityId, "activityId");
+                long truckId = ValidateParamLong(request.TruckId, "truckId");
+
+                var activityMessage = request.ActivityMessage;
+                var date = request.ActiveDate != null ? DateTime.ParseExact(request.Dob, "yyyy-MM-dd HH:mm:ss", null) : DateTime.Now;
+                AddJournalActivity(db, activityId, activityMessage, date, journalId, driverId, truckId);
+            });
+        }
+
+        public GetJournalsResponse GetJournalsOfDriver(ServiceRequest request)
+        {
+            return Run<ServiceRequest, GetJournalsResponse>(request, (resp, db, session) =>
+            {
+                long driverId = ValidateParamLong(request.DriverId);
+                var includeActivity = request.IncludeActivity == null ? false : request.IncludeActivity.Value;
+                var includeAttachment = request.IncludeAttachment == null ? false : request.IncludeAttachment.Value;
+                //var includeStopPoint = request.IncludeStopPoint == null ? false : request.IncludeStopPoint.Value;
+                var includeDriver = request.IncludeDriver == null ? false : request.IncludeDriver.Value;
+
+                resp.Items = new List<JournalModel>();
+                var query = db.DBModel.Journals
+                    .Include(x => x.JournalActivities)
+                    .Include(x => x.JournalStopPoints)
+                    .Include(x => x.JournalDrivers)
+                    .Where(x =>(x.Status == JournalStatus.Actived || x.Status == JournalStatus.Started) && x.JournalDrivers.Any(y => y.UserId == driverId))
+                    .OrderByDescending(x => x.Status).ThenBy(x => x.ActiveDate);
+
+                var sql = query.ToString();
+
+                var journals = query.ToArray();
+                foreach (var journal in journals)
+                    resp.Items.Add(CreateJournalModel(journal, includeActivity, includeAttachment, true, includeDriver));
+            });
+        }
+
+        public BaseResponse SyncActivities(SyncActivitiesRequest request)
+        {
+            return Run<SyncActivitiesRequest, BaseResponse>(request, (resp, db, session) =>
+            {              
+                foreach (var item in request.Items)
                 {
-                    ActivityId = activityId,
-                    ActivityDetail = activityMessage,
-                    CreatedTS = DateTime.Now,
-                    LastUpdatedTS = DateTime.Now,
-                    UserId = driverId,
-                    JournalId = journalId,
-                });
+                    var date = item.CreatedTS != null ? DateTime.ParseExact(item.CreatedTS, "yyyy-MM-dd HH:mm:ss", null) : DateTime.Now;
+                    AddJournalActivity(db, item.ActivityId, item.ActivityDetail, date, item.JournalId, item.DriverId, item.TruckId);
+                }
+            });
+        }
+
+        public BaseResponse SyncLocations(SyncLocationsRequest request)
+        {
+            return Run<SyncLocationsRequest, BaseResponse>(request, (resp, db, session) =>
+            {
+                foreach (var item in request.Items)
+                {
+                    var date = item.CreatedTS != null ? DateTime.ParseExact(item.CreatedTS, "yyyy-MM-dd HH:mm:ss", null) : DateTime.Now;
+                    AddJournalLocation(db, item.JournalId, item.DriverId, item.TruckId, item.Latitude, item.Longitude, item.Accuracy, date);
+                }
+            });
+        }
+
+        public BaseResponse SyncJournal(SyncRequest request)
+        {
+            return Run<SyncRequest, BaseResponse>(request, (resp, db, session) =>
+            {
+                foreach (var item in request.Locations)
+                {
+                    var date = item.CreatedTS != null ? DateTime.ParseExact(item.CreatedTS, "yyyy-MM-dd HH:mm:ss", null) : DateTime.Now;
+                    AddJournalLocation(db, item.JournalId, item.DriverId, item.TruckId, item.Latitude, item.Longitude, item.Accuracy, date);
+                }
+
+                foreach (var item in request.Activities)
+                {
+                    var date = item.CreatedTS != null ? DateTime.ParseExact(item.CreatedTS, "yyyy-MM-dd HH:mm:ss", null) : DateTime.Now;
+                    AddJournalActivity(db, item.ActivityId, item.ActivityDetail, date, item.JournalId, item.DriverId, item.TruckId);
+                }
             });
         }
     }

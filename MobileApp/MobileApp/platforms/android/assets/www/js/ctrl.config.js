@@ -1,49 +1,45 @@
 var ConfigController = (function () {
-    function ConfigController($scope, $state, $ionicLoading, $ionicPopup, $ionicHistory) {
+    function ConfigController($scope, $state, $ionicLoading, $ionicPopup, $ionicViewSwitcher) {
         this.$scope = $scope;
         this.$state = $state;
         this.$ionicLoading = $ionicLoading;
         this.$ionicPopup = $ionicPopup;
-        this.$ionicHistory = $ionicHistory;
-        app.log.debug(this.$ionicHistory.viewHistory());
-        this.R = resources.language;
+        this.$ionicViewSwitcher = $ionicViewSwitcher;
+        this.R = R;
         this.data = {
             ip: kapp.config.ipAddress,
             port: kapp.config.port,
             serviceName: kapp.config.serviceName,
             requestTimeout: kapp.config.requestTimeout.toString(),
-            enableMap: kapp.config.enableMap
+            enableGoogleService: kapp.config.enableGoogleService
         };
     }
     ConfigController.prototype.save = function () {
         var data = this.data;
         if (kapp.utils.isEmpty(data.ip)) {
-            var alertPopup = this.$ionicPopup.alert({ title: this.R.Error, template: this.R.IPaddress_is_empty, });
+            this.$ionicPopup.alert({ title: R.Error, template: R.IPaddress_is_empty, });
             return;
         }
         if (kapp.utils.isEmpty(data.port)) {
-            var alertPopup = this.$ionicPopup.alert({
-                title: this.R.Error,
-                template: this.R.Port_is_empty,
-            });
+            this.$ionicPopup.alert({ title: R.Error, template: R.Port_is_empty, });
             return;
         }
         if (kapp.utils.isEmpty(data.serviceName)) {
-            var alertPopup = this.$ionicPopup.alert({ title: this.R.Error, template: this.R.Service_is_empty, });
+            this.$ionicPopup.alert({ title: R.Error, template: R.Service_is_empty, });
             return;
         }
         var requestTimeout = app.utils.parseInt(data.requestTimeout);
         if (requestTimeout == null || requestTimeout <= 0) {
-            var alertPopup = this.$ionicPopup.alert({ title: this.R.Error, template: this.R.Timout_is_invalid, });
+            this.$ionicPopup.alert({ title: R.Error, template: R.Timout_is_invalid, });
             return;
         }
         var configCtrl = this;
-        this.$ionicLoading.show({ template: this.R.Saving, noBackdrop: false, });
+        configCtrl.$ionicLoading.show({ template: R.Saving, noBackdrop: false, });
         kapp.db.saveSettings([
             { name: "ipAddress", value: data.ip },
             { name: "port", value: data.port },
             { name: "serviceName", value: data.serviceName },
-            { name: "enableMap", value: data.enableMap ? "1" : "0" },
+            { name: "enableGoogleService", value: data.enableGoogleService ? "1" : "0" },
             { name: "requestTimeout", value: data.requestTimeout }
         ], function (result) {
             configCtrl.$ionicLoading.hide();
@@ -53,11 +49,11 @@ var ConfigController = (function () {
                 kapp.config.serviceName = data.serviceName;
                 kapp.config.updateBaseURL();
                 kapp.config.requestTimeout = requestTimeout;
-                kapp.config.enableMap = data.enableMap;
-                configCtrl.$ionicHistory.goBack();
+                kapp.config.enableGoogleService = data.enableGoogleService;
+                configCtrl.goBack();
             }
             else {
-                var alertPopup = this.$ionicPopup.alert({ title: this.R.Error, template: result.errorMessage, });
+                configCtrl.$ionicPopup.alert({ title: R.Error, template: result.errorMessage, });
             }
         });
     };
@@ -65,10 +61,8 @@ var ConfigController = (function () {
         var cc = this;
         var nextState = app.paramters.nextState;
         app.paramters.nextState = null;
-        if (nextState != null)
-            cc.$state.go(nextState);
-        else
-            cc.$ionicHistory.goBack();
+        cc.$ionicViewSwitcher.nextDirection("back");
+        cc.$state.go(nextState);
     };
     return ConfigController;
 }());

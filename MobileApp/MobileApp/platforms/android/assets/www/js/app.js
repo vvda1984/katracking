@@ -50,8 +50,15 @@ angular.module("starter", ["ionic", "ngCordova", "starter.controllers", "starter
 })
     .config(function ($stateProvider, $urlRouterProvider) {
     $stateProvider
+        .state("mainScreen", {
+        url: "/main",
+        cache: false,
+        templateUrl: "templates/main.html",
+        controller: "MainController as mc"
+    })
         .state("loginScreen", {
         url: "/login",
+        cache: false,
         templateUrl: "templates/login.html",
         controller: "LoginController as lc"
     })
@@ -71,18 +78,48 @@ angular.module("starter", ["ionic", "ngCordova", "starter.controllers", "starter
         controller: "TruckDetailController as tdc"
     })
         .state("journalScreen", {
+        cache: false,
         url: "/journal",
-        templateUrl: "templates/journal.html"
+        templateUrl: "templates/journal.html",
+        controller: "JournalController as jc"
     })
         .state("viewJournalScreen", {
+        cache: false,
         url: "/journal-view",
         templateUrl: "templates/journal-view.html",
         controller: "JournalViewController as jvc"
     })
-        .state("mainScreen", {
-        url: "/main",
-        templateUrl: "templates/main.html",
-        controller: "MainController as mc"
+        .state("tab", {
+        url: "/tab",
+        abstract: true,
+        templateUrl: "templates/journal-tabs.html"
+    })
+        .state("tab.dash", {
+        url: "/dash",
+        views: {
+            "tab-dash": {
+                templateUrl: "templates/journal-dash.html",
+                controller: "JournalDashController as jdc"
+            }
+        }
+    })
+        .state("tab.map", {
+        url: "/map",
+        views: {
+            "tab-map": {
+                templateUrl: "templates/journal-map.html",
+                controller: "JournalMapController as jmc"
+            }
+        }
+    })
+        .state("tab.activity", {
+        url: "/activity",
+        views: {
+            "tab-activity": {
+                templateUrl: "templates/journal-activity.html",
+                controller: "JournalActivityController as jac"
+            }
+        }
     });
     // if none of the above states are matched, use this as the fallback
     $urlRouterProvider.otherwise("/login");

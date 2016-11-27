@@ -19,6 +19,15 @@
     text-align:center;
 }
 
+.margin-left {
+    margin-left: 8px;
+}
+
+.margin-right {
+    margin-right: 8px;
+}
+
+
 /* Config */
 .align-right-input {
     text-align: end;
@@ -45,7 +54,18 @@
 .login{
     /*background: #BBDEFB;*/
     background-image: url("../img/bg.jpg");
-    color: #ffffff;    
+    color: #fff;    
+}
+
+    .login a {
+        color: #fff;    
+    }
+
+.login-panel{
+    background:#fff;
+    padding:16px;
+    margin:128px 4px 4px 4px;
+    border-radius:5px;
 }
 
 .login-footer{
@@ -54,10 +74,12 @@
     text-align:center;
 }
 
-.logo-large{
-    width : 128px;    
-    margin-top:48px;
-    margin-bottom:48px;
+.logo-large {
+    width: 128px;
+    height: 128px;
+    margin-top: -96px;
+    margin-bottom: 24px;
+    z-index: 999;
 }
 
 /* main */

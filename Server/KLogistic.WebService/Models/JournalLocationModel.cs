@@ -33,7 +33,7 @@ namespace KLogistic.WebService
         public JournalLocationModel(JournalLocation item)
         {
             JournalId = item.JournalId;
-            DriverId = item.DriverId;
+            DriverId = item.UserId;
             TruckId = item.TruckId;
             Latitude = item.Latitude;
             Longitude = item.Longitude;

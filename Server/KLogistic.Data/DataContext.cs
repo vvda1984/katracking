@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KLogistic.Core;
+using System;
 using System.Linq;
 
 namespace KLogistic.Data
@@ -45,6 +46,36 @@ namespace KLogistic.Data
         internal bool Exists<T>(T entity) where T : class
         {
             return DBModel.Set<T>().Local.Any(e => e == entity);
+        }
+    }
+
+    public partial class Truck
+    {
+        public void Validate()
+        {
+            if (string.IsNullOrWhiteSpace(TruckName))
+                throw new KException("Truck Name is empty");
+
+            if (TruckName.Length < 3)
+                throw new KException("Truck name is too short");
+
+            if (string.IsNullOrWhiteSpace(TruckNumber))
+                throw new KException("Truck Number is empty");
+        }
+    }
+
+    public partial class User
+    {
+        public void Validate()
+        {
+            if (string.IsNullOrWhiteSpace(Username))
+                throw new KException("User name is empty");
+
+            if (Username.Length < 3)
+                throw new KException("User name is too short");
+
+            if (string.IsNullOrWhiteSpace(Password))
+                throw new KException("Password is empty");
         }
     }
 }

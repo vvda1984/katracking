@@ -3,22 +3,42 @@
         <div class="bar bar-header bar-positive">
             <button class="button button-icon icon ion-navicon" ng-click="mc.showHideMenu()"></button>
             <div class="h1 title">MAIN</div>
+            <button class="button button-icon icon ion-android-refresh" ng-click="mc.refresh()"></button>
         </div>
-
-        <ion-content class="padding has-header" overflow-scroll="false">
-            <div class="card" ng-repeat="jg in mc.data.journalGroups">
+        <div class="bar bar-subheader">
+            <h2 class="title">{{mc.R.SelectJournal}}</h2>
+        </div>
+        <ion-content class="has-header has-subheader" overflow-scroll="false">
+            <!--<div class="card" ng-repeat="jg in mc.data.journalGroups">
                 <div ng-class="jg.isCurrent ? 'item item-balanced item-divider' : 'item item-dark item-divider'">
                     {{jg.name}}
                 </div>
                 <div class="list">
                     <a ng-repeat="j in jg.journals" class="item item-icon-left item-icon-right" href="" ng-click="mc.viewJournal(jg.id, j.id);">
-                        <i class="icon ion-chatbubble-working"></i>
+                        <i ng-class="jg.isCurrent ? 'icon ion-ios-navigate' : 'icon ion-ios-navigate-outline'"></i>
                         <h2>{{j.name}}</h2>
                         <p>{{j.description}}</p>
+                        <p>{{mc.R.Start}}: {{j.startLocation}}</p>
+                        <p>{{mc.R.End}}: {{j.endLocation}}</p>
                         <i class="icon ion-ios-arrow-right"></i>
                     </a>
                 </div>
+            </div>-->
+
+            <div class="list" ng-repeat="jg in mc.data.journalGroups">               
+                <div ng-class="jg.isCurrent ? 'item item-balanced item-divider' : 'item item-dark item-divider'">
+                    {{jg.name}}
+                </div>
+                <a ng-repeat="j in jg.journals" class="item item-icon-left item-icon-right" href="" ng-click="mc.viewJournal(jg.id, j.id);">
+                    <i ng-class="jg.isCurrent ? 'icon ion-ios-navigate' : 'icon ion-ios-navigate-outline'"></i>
+                    <h2>{{j.name}}</h2>
+                    <p>{{j.description}}</p>
+                    <p>{{mc.R.Start}}: {{j.startLocation}}</p>
+                    <p>{{mc.R.End}}: {{j.endLocation}}</p>
+                    <i class="icon ion-ios-arrow-right"></i>
+                </a>
             </div>
+
         </ion-content>
     </ion-side-menu-content>
 

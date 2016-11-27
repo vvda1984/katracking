@@ -13,7 +13,7 @@ namespace KLogistic.Data
 
         public long JournalId { get; set; }
 
-        public long DriverId { get; set; }
+        public long UserId { get; set; }
 
         public long TruckId { get; set; }
 
@@ -29,7 +29,7 @@ namespace KLogistic.Data
 
         public DateTime LastUpdatedTS { get; set; }
 
-        public virtual Driver Driver { get; set; }
+        public virtual User User { get; set; }
 
         public virtual Journal Journal { get; set; }
 

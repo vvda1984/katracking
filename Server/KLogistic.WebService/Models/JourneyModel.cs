@@ -16,7 +16,7 @@ namespace KLogistic.WebService
         public long TruckId { get; set; }
 
         [DataMember(Name = "driver")]
-        public DriverModel Driver { get; set; }
+        public UserModel Driver { get; set; }
 
         [DataMember(Name = "truck")]
         public TruckModel Truck { get; set; }

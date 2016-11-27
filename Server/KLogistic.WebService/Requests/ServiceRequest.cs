@@ -140,5 +140,8 @@ namespace KLogistic.WebService
 
         [DataMember]
         public string ActivityMessage { get; set; }
+
+        [DataMember]
+        public string CreatedTS { get; set; }
     }
 }

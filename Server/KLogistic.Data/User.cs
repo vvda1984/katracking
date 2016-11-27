@@ -68,17 +68,5 @@ namespace KLogistic.Data
         //public virtual ICollection<AppSession> AppSessions { get; set; }
 
         //public virtual Driver Driver { get; set; }
-
-        public void Validate()
-        {
-            if (string.IsNullOrWhiteSpace(Username))
-                throw new KException("User name is empty");
-
-            if (Username.Length < 3)
-                throw new KException("User name is too short");
-
-            if (string.IsNullOrWhiteSpace(Password))
-                throw new KException("Password is empty");
-        }
     }
 }

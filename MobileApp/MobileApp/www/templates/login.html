@@ -1,21 +1,29 @@
 ﻿<ion-view view-title="Login" class="login">      
     <ion-content class="padding" overflow-scroll="false">
-        <div class="list">
+        <div class="login-panel">
             <div class="center-parent">
                 <img src="../img/logo-large.png" class="logo-large" />
             </div>
-            <label class="item item-input">
-                <i class="icon ion-person placeholder-icon"></i>
-                <input type="text" placeholder="{{lc.R.Username}}" ng-model="lc.loginData.username">
-            </label>
-            <label class="item item-input">
-                <i class="icon ion-android-lock placeholder-icon"></i>
-                <input type="password" placeholder="{{lc.R.Password}}" ng-model="lc.loginData.password">
-            </label>
-            <label class="item-borderless">
-                <button class="button button-block button-positive" type="submit" ng-click="lc.signin()">{{lc.R.Signin}}</button>
-            </label>
+
+            <h3 style="text-align:center;margin:0 0 24px 0;color:#387EF5">{{lc.R.AppName}}</h3>
+
+            <div class="list">
+                <label class="item item-input item-icon-left" style="border-radius:5px;">
+                    <i style="margin:2px;" class="icon ion-person placeholder-icon"></i>
+                    <input style="margin-left:32px;" type="text" placeholder="{{lc.R.Username}}" ng-model="lc.loginData.username">
+                </label>
+
+                <label class="item item-input item-icon-left" style="border-radius:5px;margin:8px 0 8px 0;">
+                    <i style="margin:2px;" class="icon ion-android-lock placeholder-icon"></i>
+                    <input style="margin-left:32px;" type="password" placeholder="{{lc.R.Password}}" ng-model="lc.loginData.password">
+                </label>
+                <label class="item-borderless">
+                    <button style="margin-top:32px;" class="button button-block button-positive" type="submit" ng-click="lc.signin()">{{lc.R.Signin}}</button>
+                </label>
+            </div>
         </div>
+        <!--<button class="button button-block button-positive" type="submit" ng-click="lc.signin()">{{lc.R.Signin}}</button>-->
+        <!--<div class="title" style="text-align:center"><a href="#/config">{{lc.R.Settings}}</a></div>-->       
     </ion-content>
 
     <!--<div style="position:fixed; bottom:4px; text-align:center">
@@ -23,6 +31,6 @@
     </div>-->
 
     <div class="bar bar-footer login-footer">        
-        <div class="title" style="font-size:14px;">{{lc.R.Powered_by}} - <a href="#/config">{{lc.R.Settings}}</a></div>        
+        <div class="title" style="font-size:14px;">{{lc.R.Powered_by}} - <a href="" ng-click="lc.openConfig()">{{lc.R.Settings}}</a></div>        
     </div>
 </ion-view>

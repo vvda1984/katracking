@@ -97,5 +97,25 @@ namespace KLogistic.WebService
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "trackJournal", ResponseFormat = WebMessageFormat.Json)]
         BaseResponse TrackJournal(ServiceRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "getDriverJournals", ResponseFormat = WebMessageFormat.Json)]
+        GetJournalsResponse GetJournalsOfDriver(ServiceRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "addJournalActivity", ResponseFormat = WebMessageFormat.Json)]
+        BaseResponse AddJournalActivity(ServiceRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "syncLocations", ResponseFormat = WebMessageFormat.Json)]
+        BaseResponse SyncLocations(SyncLocationsRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "syncActivities", ResponseFormat = WebMessageFormat.Json)]
+        BaseResponse SyncActivities(SyncActivitiesRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "syncJournal", ResponseFormat = WebMessageFormat.Json)]
+        BaseResponse SyncJournal(SyncRequest request);
     }
 }

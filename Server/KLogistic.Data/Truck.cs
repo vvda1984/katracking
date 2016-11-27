@@ -25,7 +25,7 @@ namespace KLogistic.Data
         [StringLength(100)]
         public string TruckNumber { get; set; }
 
-        [Column(TypeName = "xml")]        
+        [Column(TypeName = "xml")]
         public string ExtendedData { get; set; }
 
         [StringLength(512)]
@@ -39,17 +39,5 @@ namespace KLogistic.Data
         public DateTime LastUpdatedTS { get; set; }
 
         public virtual ICollection<JournalLocation> JournalLocations { get; set; }
-
-        public void Validate()
-        {
-            if (string.IsNullOrWhiteSpace(TruckName))
-                throw new KException("Truck Name is empty");
-
-            if (TruckName.Length < 3)
-                throw new KException("Truck name is too short");
-
-            if (string.IsNullOrWhiteSpace(TruckNumber))
-                throw new KException("Truck Number is empty");
-        }
     }
 }

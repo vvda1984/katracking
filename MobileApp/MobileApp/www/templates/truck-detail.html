@@ -1,9 +1,13 @@
 ﻿<ion-view view-title="{{tdc.R.TruckDetail}}">
-    <ion-nav-bar class="bar-positive">
+    <!--<ion-nav-bar class="bar-positive">
         <ion-nav-back-button>
         </ion-nav-back-button>
-    </ion-nav-bar>
-    <ion-content overflow-scroll="false">
+    </ion-nav-bar>-->
+    <div class="bar bar-header bar-positive">
+        <button class="button button-icon icon ion-ios-arrow-left" ng-click="tdc.goBack()"></button>
+        <div class="h1 title">{{tdc.R.TruckDetail}}</div>
+    </div>
+    <ion-content class="has-header has-footer" overflow-scroll="false">
         <div class="list">
             <label class="item item-input">
                 <span class="input-label">Name</span>
