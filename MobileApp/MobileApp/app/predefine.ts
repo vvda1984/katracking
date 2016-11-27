@@ -79,7 +79,6 @@ interface IDatabaseAPI {
     updateLocationsStatus(ids: Array<number>, syncStatus: SyncStatus, callback: (result: IQueryResult) => any): void;
 }
 
-
 interface IQueryResult {
     errorMessage?: string;
     rows?: any;

@@ -404,6 +404,7 @@ class JournalMapController {
 
 class JournalActivityController {
     public journal: any;
+    public data: any;
     public R: any;
     public activities: Array<any>;
     private _queryActivities: any;
@@ -415,7 +416,8 @@ class JournalActivityController {
         private $ionicViewSwitcher: any,
         private $state: any) {
 
-        let ctrl = this;
+        this.data = { activities: [] };
+        let ctrl = this;        
         ctrl.R = R;
         ctrl.journal = kapp.paramters.journal;
         ctrl._queryActivities = function () {
@@ -425,7 +427,7 @@ class JournalActivityController {
                     let activity = JSON.parse(result.rows.item(i).value);
                     activites.push(activity);
                 }
-                ctrl.activities = activites;
+                ctrl.data.activities = activites;
             });
         };
         ctrl._queryActivities();

@@ -348,6 +348,7 @@ var JournalActivityController = (function () {
         this.$ionicPopup = $ionicPopup;
         this.$ionicViewSwitcher = $ionicViewSwitcher;
         this.$state = $state;
+        this.data = { activities: [] };
         var ctrl = this;
         ctrl.R = R;
         ctrl.journal = kapp.paramters.journal;
@@ -358,7 +359,7 @@ var JournalActivityController = (function () {
                     var activity = JSON.parse(result.rows.item(i).value);
                     activites.push(activity);
                 }
-                ctrl.activities = activites;
+                ctrl.data.activities = activites;
             });
         };
         ctrl._queryActivities();
