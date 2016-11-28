@@ -20,7 +20,7 @@
         this.ionicLoading = $ionicLoading;
         this.ionicPopup = $ionicPopup;
 
-        app.network.stopSync();
+        app.serverAPI.stopSync();
         app.paramters.clear();
 
         this.loginData = { username: '', password: '', };
@@ -42,10 +42,14 @@
         }
 
         let ctrl = this;
+        let showErrorFunction = function (errorMessage) {
+            ctrl.ionicLoading.hide();
+            ctrl.ionicPopup.alert({ title: R.Error, template: errorMessage });
+        };
+
         ctrl.ionicLoading.show({ template: R.Signing, noBackdrop: false, });
         //app.network.ajaxPost("signin", { username: data.username, password: data.password }, function (result) {
-        app.network.post(ctrl.http, "signin", { username: data.username, password: data.password }, function (result) {
-            ctrl.ionicLoading.hide();
+        app.serverAPI.post(ctrl.http, "signin", { username: data.username, password: data.password }, function (result) {
             if (app.utils.isEmpty(result.errorMessage)) {
                 app.context.user = result.data.user;
                 app.context.token = result.data.token;
@@ -56,10 +60,7 @@
                 app.context.DB_JOURNAL_ACTIVITIES_TBL = DB_JOURNAL_ACTIVITIES_TBL + "_" + userId;
                 app.context.DB_JOURNAL_LOCATIONS_TBL = DB_JOURNAL_LOCATIONS_TBL + "_" + userId;
 
-                // Get user context
-                ctrl.$ionicLoading.show({ template: ctrl.R.Loading, noBackdrop: false, });
-                app.db.getUserContext(app.context.user.id, function (result: IQueryResult) {      
-                    ctrl.ionicLoading.hide();             
+                app.db.getUserContext(app.context.user.id, function (result: IQueryResult) {
                     if (app.utils.isEmpty(result.errorMessage)) {
                         let userContext = null;
                         try {
@@ -70,47 +71,80 @@
                         catch (ex) {
                             app.log.error(ex.message);
                         }
-
                         app.db.initializeForUser(function (result: IQueryResult) {
                             if (app.utils.isEmpty(result.errorMessage)) {
                                 ctrl.$ionicLoading.show({ template: R.Processing, noBackdrop: false, });
-                                app.network.syncData(ctrl.$http, function (errorMessage) {
-                                    ctrl.ionicLoading.hide();
-                                    if (app.utils.isEmpty(errorMessage)) {
-                                        app.network.getJournals(ctrl.$http, ctrl.$ionicLoading, ctrl.$ionicPopup, function () {
-                                            if (userContext == null || userContext.truck == null) {
-                                                app.paramters.allowBack = false;
-                                                ctrl.state.go('truckScreen');
-                                            } else {
-                                                app.context.userContext = userContext;
-                                                ctrl.state.go('mainScreen');
-                                            }
-                                        });
+
+                                app.serverAPI.getSettings(ctrl.http, function (result) {
+                                    if (!app.utils.isEmpty(result.errorMessage)) {
+                                        showErrorFunction(result.errorMessage);
                                     } else {
-                                        ctrl.ionicPopup.alert({ title: R.Error, template: errorMessage });
+                                        for (let i = 0; i < result.data.items.length; i++) {
+                                            let item = result.data.items[i];
+                                            app.config.setValue(item.name, item.value);
+                                        }
+
+                                        $.getScript("http://maps.google.com/maps/api/js?v=3.exp&sensor=false&key=" + app.config.googleKey)
+                                            .then(function (data, status) {
+                                                app.log.debug(status);
+                                                app.serverAPI.getJournals(ctrl.$http, ctrl.$ionicLoading, ctrl.$ionicPopup, function () {
+                                                    if (userContext == null || userContext.truck == null) {
+                                                        app.paramters.allowBack = false;
+                                                        ctrl.state.go('truckScreen');
+                                                    } else {
+                                                        app.context.userContext = userContext;
+                                                        ctrl.state.go('mainScreen');
+                                                    }
+                                                });
+                                            });
                                     }
                                 });
                             }
-                            else {                            
-                                ctrl.ionicPopup.alert({ title: R.Error, template: result.errorMessage });
+                            else {
+                                showErrorFunction(result.errorMessage);
                             }
                         });
-                        
-                    } else {                        
-                        ctrl.ionicPopup.alert({ title: R.Error, template: result.errorMessage });
+
+                        //app.db.initializeForUser(function (result: IQueryResult) {
+                        //    if (app.utils.isEmpty(result.errorMessage)) {
+                        //        ctrl.$ionicLoading.show({ template: R.Processing, noBackdrop: false, });
+                        //        app.network.syncData(ctrl.$http, function (errorMessage) {
+                        //            ctrl.ionicLoading.hide();
+                        //            if (app.utils.isEmpty(errorMessage)) {
+                        //                app.network.getJournals(ctrl.$http, ctrl.$ionicLoading, ctrl.$ionicPopup, function () {
+                        //                    if (userContext == null || userContext.truck == null) {
+                        //                        app.paramters.allowBack = false;
+                        //                        ctrl.state.go('truckScreen');
+                        //                    } else {
+                        //                        app.context.userContext = userContext;
+                        //                        ctrl.state.go('mainScreen');
+                        //                    }
+                        //                });
+                        //            } else {
+                        //                ctrl.ionicPopup.alert({ title: R.Error, template: errorMessage });
+                        //            }
+                        //        });
+                        //    }
+                        //    else {                            
+                        //        ctrl.ionicPopup.alert({ title: R.Error, template: result.errorMessage });
+                        //    }
+                        //});
+
+                    } else {
+                        showErrorFunction(result.errorMessage);
                     }
                 });
             }
             else {
-                ctrl.$ionicPopup.alert({ title: ctrl.R.Error, template: result.errorMessage, });
+                showErrorFunction(result.errorMessage);
             }
         });
     }
 
     public loadJournalData(ctrl: LoginController, callback: any) {
         ctrl.ionicLoading.show({ template: R.Loading, noBackdrop: false, });
-        if (app.network.isReady()) {
-            app.network.post(ctrl.$http, "getDriverJournals", { token: app.context.token, driverId: app.context.user.id }, function (result) {
+        if (app.serverAPI.isReady()) {
+            app.serverAPI.post(ctrl.$http, "getDriverJournals", { token: app.context.token, driverId: app.context.user.id }, function (result) {
                 ctrl.$ionicLoading.hide();
                 if (app.utils.isEmpty(result.errorMessage)) {
                     // save offline...

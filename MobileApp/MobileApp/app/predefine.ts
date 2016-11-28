@@ -252,6 +252,7 @@ interface IJournalLocation {
     longitude: number;
     accuracy: number;
     createdTS: string;
+    address?: string;
     stopCount?: number;    
     token?: string;    
 }

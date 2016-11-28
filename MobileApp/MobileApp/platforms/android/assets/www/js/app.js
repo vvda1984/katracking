@@ -77,11 +77,11 @@ angular.module("starter", ["ionic", "ngCordova", "starter.controllers", "starter
         templateUrl: "templates/truck-detail.html",
         controller: "TruckDetailController as tdc"
     })
-        .state("journalScreen", {
+        .state("testMapScreen", {
         cache: false,
-        url: "/journal",
-        templateUrl: "templates/journal.html",
-        controller: "JournalController as jc"
+        url: "/testmap",
+        templateUrl: "templates/map.html",
+        controller: "TestMapController as tmc"
     })
         .state("viewJournalScreen", {
         cache: false,

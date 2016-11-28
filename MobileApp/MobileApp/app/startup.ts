@@ -9,12 +9,13 @@ class KConfig {
     public pingInterval: number;
     public requestTimeout: number;
     public enableMap: boolean;
-    public mapZoom: number;
+    public defaultMapZoom: number;
     public acceptedAccuracy: number;
     public acceptedDistance: number;
-    public getLocationInternal: number;
+    public getLocationInterval: number;
     public enableGoogleService: boolean;
     public syncInterval: number;
+    public googleKey: string;
 
     constructor() {
         this.enableDebug = true;
@@ -28,12 +29,13 @@ class KConfig {
         this.pingInterval = 3;
         this.requestTimeout = 30;
         this.enableMap = true;
-        this.mapZoom = 17;
-        this.acceptedAccuracy = 100;
+        this.defaultMapZoom = 17;
+        this.acceptedAccuracy = 150;
         this.acceptedDistance = 30;
-        this.getLocationInternal = 30;
+        this.getLocationInterval = 30;
         this.enableGoogleService = true;
         this.syncInterval = 5 * 60;
+        this.googleKey = "AIzaSyCD_ZRcJdEcKM3PEAAYKj7Fmyg-Pv2G-HQ";
     }
 
     public updateBaseURL(): void {
@@ -64,13 +66,31 @@ class KConfig {
                 this.serviceName = value;
                 break
             case "pingInterval":
-                this.pingInterval = parseInt(value);
+                this.pingInterval = app.utils.parseInt(value);
                 break
             case "requestTimeout":
-                this.requestTimeout = parseInt(value);
+                this.requestTimeout = app.utils.parseInt(value);
                 break
             case "enableMap":
-                this.enableMap = parseInt(value) == 1;
+                this.enableMap = app.utils.parseInt(value) == 1;
+                break
+            case "enableGoogleService":
+                this.enableGoogleService = app.utils.parseInt(value) == 1;
+                break
+            case "defaultMapZoom":
+                this.defaultMapZoom = app.utils.parseInt(value);
+                break
+            case "acceptedAccuracy":
+                this.acceptedAccuracy = app.utils.parseInt(value);
+                break
+            case "acceptedDistance":
+                this.acceptedDistance = app.utils.parseInt(value);
+                break
+            case "acceptedDistance":
+                this.acceptedDistance = app.utils.parseInt(value);
+                break
+            case "googleKey":
+                this.googleKey = value;
                 break
         }
     }
@@ -290,7 +310,7 @@ class KNetwork {
     private _enablePing: boolean;
     private _pingAction: any;
     private _curentTimer: any;
-    private _syncJournalAction: (data: any, callbck: (errorMessage: string) => any) => any;
+    private _submitUnsyncDataFunction: (data: any, callback: (errorMessage: string) => any) => any;
 
     constructor() {
         this._isServerConnected = true;
@@ -423,8 +443,8 @@ class KNetwork {
 
     public getJournals(http: angular.IHttpService, ionicLoading: any, ionicPopup : any, callback:any) {       
         ionicLoading.show({ template: R.Loading, noBackdrop: false, });
-        if (app.network.isReady()) {
-            app.network.post(http, "getDriverJournals", { token: app.context.token, driverId: app.context.user.id }, function (result) {
+        if (app.serverAPI.isReady()) {
+            app.serverAPI.post(http, "getDriverJournals", { token: app.context.token, driverId: app.context.user.id }, function (result) {
                 ionicLoading.hide();
                 if (app.utils.isEmpty(result.errorMessage)) {
 
@@ -445,6 +465,10 @@ class KNetwork {
                 app.context.setJournalGroups(journals, callback);
             });
         }
+    }
+
+    public getSettings(http: angular.IHttpService, callback: (result: IPostResult) => any) {
+        app.serverAPI.post(http, "getSettings", { token: app.context.token, driverId: app.context.user.id }, callback);
     }
 
     public submitActivity(http: angular.IHttpService, request: IJournalActivity, important: boolean, callback: (errorMessage: string) => any) {        
@@ -480,6 +504,12 @@ class KNetwork {
     }
 
     public submitLocation(http: angular.IHttpService, request: IJournalLocation, important: boolean, callback: (errorMessage: string) => any) {
+        if (request.accuracy > app.config.acceptedAccuracy) {
+            app.log.debug("Ignore (" + request.latitude.toString() + ", " + request.longitude.toString() + ", " + request.accuracy.toString() + ")");
+            callback(R.LocationNotCorrect);
+            return;
+        }
+
         let n = this;
         let sycnStatus = SyncStatus.Unsync;
         let errorMessage = null;
@@ -491,7 +521,7 @@ class KNetwork {
         };
         
         if (n.isReady()) {
-            app.network.post(http, "addJournalLocation", request, function (response) {
+            app.serverAPI.post(http, "addJournalLocation", request, function (response) {
                 if (!app.utils.isEmpty(response.errorMessage)) {
                     if (important) {
                         callback(R.CannotConnectToServer);
@@ -581,12 +611,10 @@ class KNetwork {
 
     private _startSyncTimer(): void {
         let n = this;
-        n._curentTimer = setTimeout(function () {            
-            if (n._syncJournalAction !== null) {
-                let queueNextSync = function () {
-                    if (n._syncJournalAction !== null) n._startSyncTimer();
-                };
-
+        if (n._submitUnsyncDataFunction == undefined || n._submitUnsyncDataFunction == null) return;
+        n._curentTimer = setTimeout(function () {
+            if (n._submitUnsyncDataFunction !== null) {
+                let queueNextSync = function () { n._startSyncTimer(); };
                 if (n.isReady()) {
                     let data = {
                         token: app.context.token,
@@ -596,19 +624,19 @@ class KNetwork {
                     let activityIds = new Array<number>();
                     let locationIds = new Array<number>();
 
-                    let submitAction = function (d, ar, lr) {
+                    let submitFunction = function (d, ar, lr) {
                         if (d.activities.length === 0 && d.locations.length === 0) {
                             queueNextSync();
                             return;
                         }
-                        n._syncJournalAction(d, function (errorMessage) {                            
+                        n._submitUnsyncDataFunction(d, function (errorMessage) {
                             app.log.error(errorMessage);
-                            if (app.utils.isEmpty(errorMessage)){
+                            if (app.utils.isEmpty(errorMessage)) {
                                 app.db.updateActivitiesStatus(ar, SyncStatus.Sync, function (dbr) {
                                     if (app.utils.isEmpty(dbr.errorMessage)) {
                                         app.db.updateLocationsStatus(lr, SyncStatus.Sync, function (dbr) {
                                             if (!app.utils.isEmpty(dbr.errorMessage)) {
-                                                app.log.error(dbr.errorMessage);                                                
+                                                app.log.error(dbr.errorMessage);
                                             }
                                             queueNextSync();
                                         });
@@ -620,7 +648,7 @@ class KNetwork {
                             }
                             else
                                 queueNextSync();
-                        });                       
+                        });
                     }
 
                     app.db.getActivities(SyncStatus.Unsync, function (ar) {
@@ -644,28 +672,58 @@ class KNetwork {
                                         locationIds.push(item.id);
                                         data.locations.push(location);
                                     }
-                                    if (n._syncJournalAction !== null)
-                                        submitAction(data, activityIds, locationIds);
+                                    if (n._submitUnsyncDataFunction !== null)
+                                        submitFunction(data, activityIds, locationIds);
                                 }
                             });
                         }
                     });
                 } else {
-                    n._startSyncTimer();
+                    queueNextSync();
                 }
             }
-        }, app.config.getLocationInternal * 1000);
+        }, app.config.syncInterval * 1000);
     }
 
-    public startSync(syncJournalAction: (data: any, callbck: (errorMessage: string) => any) => any) {
-        this._syncJournalAction = syncJournalAction;
+    public startSync(submitFunction: (data: any, callback: (errorMessage: string) => any) => any) {
+        this._submitUnsyncDataFunction = submitFunction;
+        if (this._curentTimer !== undefined && this._curentTimer !== null) {
+            clearTimeout(this._curentTimer);
+        }
         this._startSyncTimer();
     }
 
     public stopSync() {
-        this._syncJournalAction = null;
+        this._submitUnsyncDataFunction = null;
         if (this._curentTimer !== undefined && this._curentTimer !== null) {
             clearTimeout(this._curentTimer);
+        }
+    }
+
+    public getActivities(http: angular.IHttpService, journalId:number, callback: (errorMessage: string, items: Array<any>)=>any) {
+        let n = this;
+        if (n.isReady()) {
+            n.post(http, "getJournalActivities", { token: app.context.token, journalId: journalId, }, function (result) {
+                if (!app.utils.isEmpty(result.errorMessage)) {
+                    callback(result.errorMessage, null);
+                } else {
+                    let activites = [];
+                    for (let i = 0; i < result.data.items.length; i++) {
+                        activites.push(result.data.items[i]);
+                    }
+                    callback(null, activites);
+                }
+            });
+        }
+        else {
+            app.db.getJournalActivities(journalId, function (result) {
+                let activites = [];
+                for (let i = 0; i < result.rows.length; i++) {
+                    let activity = JSON.parse(result.rows.item(i).value);
+                    activites.push(activity);
+                }
+                callback(null, activites);
+            });
         }
     }
 }
@@ -677,42 +735,64 @@ class KMap {
     public curAcc: number;
     public curAccCircle: google.maps.Circle;
     public curLocationMarker: google.maps.Marker;
+    public curMap: google.maps.Map;
+
     private _submitLocation: (errorMessage: string, response: IJournalLocation, callback: any) => any;
     private _curentTimer: any;
-        
-    public createMap(elementId : string): any {
-        return new google.maps.Map(document.getElementById(elementId), {
-            zoom: app.config.mapZoom,
-            //center: { lat: curlat, lng: curlng },
-            mapTypeId: google.maps.MapTypeId.ROADMAP,          
-            zoomControl: false,
-            //zoomControlOptions: {
-            //    position: google.maps.ControlPosition.RIGHT_BOTTOM
-            //},
-            mapTypeControl: false,
-            //mapTypeControlOptions: {
-            //    style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-            //    position: google.maps.ControlPosition.BOTTOM_LEFT //BOTTOM_CENTER
-            //},
-            scaleControl: false,
-            streetViewControl: false,
-            //streetViewControlOptions: {
-            //    position: google.maps.ControlPosition.RIGHT_BOTTOM
-            //},
-            //fullscreenControl: false,
-        });
+    private _watchLocationFunction: any;
+
+    constructor() {
+        this.curAcc = 0;
+        this.curLat = 0;
+        this.curLng = 0;
+        this.curMap = null;
     }
 
-    public addCurrentLocation(map: google.maps.Map, inoicPopup : any) {
-        var km = this;
+    public createMap(elementId: string): any {
+        this.curAccCircle = null;
+        this.curLocationMarker = null;
+        try {
+            this.curMap = new google.maps.Map(document.getElementById(elementId), {
+                zoom: app.config.defaultMapZoom,
+                center: { lat: this.curLat, lng: this.curLng },
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                zoomControl: false,
+                //zoomControlOptions: {
+                //    position: google.maps.ControlPosition.RIGHT_BOTTOM
+                //},
+                mapTypeControl: false,
+                //mapTypeControlOptions: {
+                //    style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+                //    position: google.maps.ControlPosition.BOTTOM_LEFT //BOTTOM_CENTER
+                //},
+                scaleControl: false,
+                streetViewControl: false,
+                //streetViewControlOptions: {
+                //    position: google.maps.ControlPosition.RIGHT_BOTTOM
+                //},
+                //fullscreenControl: false,
+            });
+            return this.curMap;
+        } catch (err) {
+            app.log.error(err);
+            return null;
+        }
+    }
+
+    public addCurrentLocation(map: google.maps.Map, ionicPopup: any) {
+        if (map == undefined || map == null) return;
+
+        var m = this;
         var btn = document.createElement("div");
         btn.className = "item";      
         btn.style.padding = "0px";
-        btn.style.borderRadius = "16px";
+        btn.style.border = "none";
+        //btn.style.borderRadius = "16px";
         btn.style.marginRight = "4px";
         btn.style.width = "32px";
         btn.style.height = "32px";
         btn.style.textAlign = "center";
+        btn.style.background = "transparent";
         var i = document.createElement("img");
         i.src = "img/cur-location.png";
         i.style.width = "28px";
@@ -727,25 +807,25 @@ class KMap {
         //btn.style.marginRight = "4px";
        
         btn.addEventListener("click", function () {
-            if (km.curLat === undefined || km.curLat === 0) {
-                km.getCurrentLocation(function (response) {
+            if (m.curLat === undefined || m.curLat === 0) {
+                m.getCurrentLocation(function (response) {
                     if (app.utils.isEmpty(response.errorMessage)) {
-                        map.setCenter({ lat: km.curLat, lng: km.curLng });
+                        map.setCenter({ lat: m.curLat, lng: m.curLng });
                     } else {
-                        inoicPopup.alert({ title: R.Error, template: response.errorMessage, });
+                        ionicPopup.alert({ title: R.Error, template: response.errorMessage, });
                     }
                 });
             } else {
-                map.setCenter({ lat: km.curLat, lng: km.curLng });
+                map.setCenter({ lat: m.curLat, lng: m.curLng });
             }            
         });
         
         map.controls[google.maps.ControlPosition.RIGHT_TOP].push(btn);      
 
-        var point = new google.maps.LatLng(this.curLat, this.curLng);
-        var cradius = (this.curAcc > 500) ? 500 : this.curAcc;
-        this.curLocationMarker = this.addMarker(map, point , null, "marker-truck.png");
-        this.curAccCircle = new google.maps.Circle({
+        var point = new google.maps.LatLng(m.curLat, m.curLng);
+        var cradius = (this.curAcc > 500) ? 500 : m.curAcc;
+        m.curLocationMarker = this.addMarker(map, point , null, "marker-truck.png");
+        m.curAccCircle = new google.maps.Circle({
             center: point,
             radius: cradius,
             map: map,
@@ -756,6 +836,8 @@ class KMap {
     }
 
     public addMarkerInLatLng(map: google.maps.Map, lat: number, lng: number, title: string, iconName: string): google.maps.Marker {       
+        if (map == undefined || map == null) return null;
+
         let iconUrl = "img/" + iconName;
         var marker = new google.maps.Marker();
         marker.setPosition(new google.maps.LatLng(lat, lng));        
@@ -774,6 +856,8 @@ class KMap {
     }
 
     public addMarker(map: google.maps.Map, point: google.maps.LatLng, title: string, iconName: string): google.maps.Marker {
+        if (map == undefined || map == null) return null;
+
         let iconUrl = "img/" + iconName;
         var marker = new google.maps.Marker();        
         marker.setPosition(point);       
@@ -858,7 +942,10 @@ class KMap {
                         m.curAccCircle.setRadius(acc > 500 ? 500 : acc);
                         m.curAccCircle.setCenter({ lat: lat, lng: lng });
                     }
-                }                
+                    if (m.curMap != null) {
+                        m.curMap.setCenter({ lat: lat, lng: lng });
+                    }
+                }
 
                 callback({ lat: lat, lng: lng, acc: acc });
             }, function (err) {
@@ -878,11 +965,11 @@ class KMap {
     }
 
     private _startGetLocationTimer(): void {
-        var _this = this;
-        _this._curentTimer = setTimeout(function () {
-            if (_this._submitLocation !== null) {
-                _this.getCurrentLocation(function (response) {     
-                    _this._submitLocation(
+        var m = this;
+        m._curentTimer = setTimeout(function () {
+            if (m._submitLocation !== null) {
+                m.getCurrentLocation(function (response) {
+                    m._submitLocation(
                         response.errorMessage,
                         {
                             token: app.context.token,
@@ -896,17 +983,39 @@ class KMap {
                             truckId: app.context.userContext.truck.id,
                         },
                         function () {
-                            if (_this._submitLocation !== null)
-                                _this._startGetLocationTimer();
+                            if (m._submitLocation !== null)
+                                m._startGetLocationTimer();
                         });
                 });
             }
-        }, app.config.getLocationInternal * 1000);
+        }, app.config.getLocationInterval * 1000);
     }
 
-    public startWatcher(submit: (errorMessage: string, request: IJournalLocation, submitCompleted:any) => any) {
-        this._submitLocation = submit;
-        this._startGetLocationTimer();
+    public startWatcher(submit: (errorMessage: string, request: IJournalLocation, submitCompleted: any) => any) {
+        var m = this;
+        m._submitLocation = submit;
+        if (m._curentTimer !== undefined && m._curentTimer !== null) {
+            clearTimeout(m._curentTimer);
+        };
+
+        m.getCurrentLocation(function (response) {
+            m._submitLocation(
+                response.errorMessage,
+                {
+                    token: app.context.token,
+                    createdTS: app.utils.getCurrentDateTime(),
+                    stopCount: 0,
+                    latitude: response.lat,
+                    longitude: response.lng,
+                    accuracy: response.acc,
+                    journalId: app.paramters.journal.id,
+                    driverId: app.context.user.id,
+                    truckId: app.context.userContext.truck.id,  
+                },
+                function () {
+                    m._startGetLocationTimer();
+                });
+        });
     }
 
     public stopWatcher() {
@@ -923,10 +1032,10 @@ var kapp = new class KApp {
     public log: KLogger;
     public db: IDatabaseAPI;
     public config: KConfig;
-    public network: KNetwork;
+    public serverAPI: KNetwork;
     public utils: KUtils;
     public context: KContext;
-    public map: KMap;
+    public mapAPI: KMap;
     public paramters: KParamter;
 
     constructor() {
@@ -934,10 +1043,10 @@ var kapp = new class KApp {
         this.log = new KLogger();
         this.utils = new KUtils();
         this.config = new KConfig();
-        this.network = new KNetwork();
+        this.serverAPI = new KNetwork();
         this.db = new LocalStorageDB();    
         this.context = new KContext();   
-        this.map = new KMap;
+        this.mapAPI = new KMap;
         this.paramters = new KParamter();
     }
 
@@ -947,3 +1056,7 @@ var kapp = new class KApp {
     //}
 }
 var app = kapp;
+
+function initializeMap() {
+    //
+}

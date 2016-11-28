@@ -55,5 +55,6 @@
     ExitJournal: "Thoát Hành Trình",
     EndJournal: "Kết Thúc Hành Trình",
     UseGoogleService: "Dịch Vụ Google",    
+    LocationNotCorrect: "Độ chính xác của vị trí vượt quá giới hạn cho phép",
 };
 var R = language_en;

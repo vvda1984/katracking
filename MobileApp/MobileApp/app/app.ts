@@ -92,12 +92,12 @@ angular.module("starter", ["ionic", "ngCordova", "starter.controllers", "starter
                 controller: "TruckDetailController as tdc"
             })
 
-            // journal screen
-            .state("journalScreen", {
+            // test map screen
+            .state("testMapScreen", {
                 cache: false,
-                url: "/journal",
-                templateUrl: "templates/journal.html",
-                controller: "JournalController as jc"
+                url: "/testmap",
+                templateUrl: "templates/map.html",
+                controller: "TestMapController as tmc"
             })
 
             // view journal screen

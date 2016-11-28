@@ -11,7 +11,7 @@ var TruckController = (function () {
         var _tc = this;
         // Login
         _tc.$ionicLoading.show({ template: R.Signing, noBackdrop: false, });
-        kapp.network.post(_tc.$http, "getTrucks", { token: kapp.context.token }, function (result) {
+        kapp.serverAPI.post(_tc.$http, "getTrucks", { token: kapp.context.token }, function (result) {
             _tc.$ionicLoading.hide();
             var selectedTruckId = kapp.context.userContext.truck != null ? kapp.context.userContext.truck.id : 0;
             var trucks = [];

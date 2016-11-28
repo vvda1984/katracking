@@ -10,7 +10,7 @@ var LoginController = (function () {
         this.state = $state;
         this.ionicLoading = $ionicLoading;
         this.ionicPopup = $ionicPopup;
-        app.network.stopSync();
+        app.serverAPI.stopSync();
         app.paramters.clear();
         this.loginData = { username: '', password: '', };
         if (app.config.enableDebug) {
@@ -29,10 +29,13 @@ var LoginController = (function () {
             return;
         }
         var ctrl = this;
+        var showErrorFunction = function (errorMessage) {
+            ctrl.ionicLoading.hide();
+            ctrl.ionicPopup.alert({ title: R.Error, template: errorMessage });
+        };
         ctrl.ionicLoading.show({ template: R.Signing, noBackdrop: false, });
         //app.network.ajaxPost("signin", { username: data.username, password: data.password }, function (result) {
-        app.network.post(ctrl.http, "signin", { username: data.username, password: data.password }, function (result) {
-            ctrl.ionicLoading.hide();
+        app.serverAPI.post(ctrl.http, "signin", { username: data.username, password: data.password }, function (result) {
             if (app.utils.isEmpty(result.errorMessage)) {
                 app.context.user = result.data.user;
                 app.context.token = result.data.token;
@@ -41,10 +44,7 @@ var LoginController = (function () {
                 app.context.DB_JOURNAL_STOPPOINTS_TBL = DB_JOURNAL_STOPPOINTS_TBL + "_" + userId;
                 app.context.DB_JOURNAL_ACTIVITIES_TBL = DB_JOURNAL_ACTIVITIES_TBL + "_" + userId;
                 app.context.DB_JOURNAL_LOCATIONS_TBL = DB_JOURNAL_LOCATIONS_TBL + "_" + userId;
-                // Get user context
-                ctrl.$ionicLoading.show({ template: ctrl.R.Loading, noBackdrop: false, });
                 app.db.getUserContext(app.context.user.id, function (result) {
-                    ctrl.ionicLoading.hide();
                     if (app.utils.isEmpty(result.errorMessage)) {
                         var userContext_1 = null;
                         try {
@@ -58,44 +58,51 @@ var LoginController = (function () {
                         app.db.initializeForUser(function (result) {
                             if (app.utils.isEmpty(result.errorMessage)) {
                                 ctrl.$ionicLoading.show({ template: R.Processing, noBackdrop: false, });
-                                app.network.syncData(ctrl.$http, function (errorMessage) {
-                                    ctrl.ionicLoading.hide();
-                                    if (app.utils.isEmpty(errorMessage)) {
-                                        app.network.getJournals(ctrl.$http, ctrl.$ionicLoading, ctrl.$ionicPopup, function () {
-                                            if (userContext_1 == null || userContext_1.truck == null) {
-                                                app.paramters.allowBack = false;
-                                                ctrl.state.go('truckScreen');
-                                            }
-                                            else {
-                                                app.context.userContext = userContext_1;
-                                                ctrl.state.go('mainScreen');
-                                            }
-                                        });
+                                app.serverAPI.getSettings(ctrl.http, function (result) {
+                                    if (!app.utils.isEmpty(result.errorMessage)) {
+                                        showErrorFunction(result.errorMessage);
                                     }
                                     else {
-                                        ctrl.ionicPopup.alert({ title: R.Error, template: errorMessage });
+                                        for (var i = 0; i < result.data.items.length; i++) {
+                                            var item = result.data.items[i];
+                                            app.config.setValue(item.name, item.value);
+                                        }
+                                        $.getScript("http://maps.google.com/maps/api/js?v=3.exp&sensor=false&key=" + app.config.googleKey)
+                                            .then(function (data, status) {
+                                            app.log.debug(status);
+                                            app.serverAPI.getJournals(ctrl.$http, ctrl.$ionicLoading, ctrl.$ionicPopup, function () {
+                                                if (userContext_1 == null || userContext_1.truck == null) {
+                                                    app.paramters.allowBack = false;
+                                                    ctrl.state.go('truckScreen');
+                                                }
+                                                else {
+                                                    app.context.userContext = userContext_1;
+                                                    ctrl.state.go('mainScreen');
+                                                }
+                                            });
+                                        });
                                     }
                                 });
                             }
                             else {
-                                ctrl.ionicPopup.alert({ title: R.Error, template: result.errorMessage });
+                                showErrorFunction(result.errorMessage);
                             }
                         });
                     }
                     else {
-                        ctrl.ionicPopup.alert({ title: R.Error, template: result.errorMessage });
+                        showErrorFunction(result.errorMessage);
                     }
                 });
             }
             else {
-                ctrl.$ionicPopup.alert({ title: ctrl.R.Error, template: result.errorMessage, });
+                showErrorFunction(result.errorMessage);
             }
         });
     };
     LoginController.prototype.loadJournalData = function (ctrl, callback) {
         ctrl.ionicLoading.show({ template: R.Loading, noBackdrop: false, });
-        if (app.network.isReady()) {
-            app.network.post(ctrl.$http, "getDriverJournals", { token: app.context.token, driverId: app.context.user.id }, function (result) {
+        if (app.serverAPI.isReady()) {
+            app.serverAPI.post(ctrl.$http, "getDriverJournals", { token: app.context.token, driverId: app.context.user.id }, function (result) {
                 ctrl.$ionicLoading.hide();
                 if (app.utils.isEmpty(result.errorMessage)) {
                     // save offline...

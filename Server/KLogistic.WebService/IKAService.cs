@@ -10,7 +10,7 @@ using System.Text;
 namespace KLogistic.WebService
 {
     [ServiceContract]
-    public interface IKAService : IUserService, IDriverService, IAuthService, ITruckService, IJournalService
+    public interface IKAService : IUserService, IDriverService, IAuthService, ITruckService, IJournalService, IConfigService
     {
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "ping", ResponseFormat = WebMessageFormat.Json)]

@@ -32,6 +32,8 @@ namespace KLogistic.WebService
             cb.Register(c => new SigninResponse()).As<SigninResponse>();
             cb.Register(c => new UploadAttachmentResponse()).As<UploadAttachmentResponse>();
             cb.Register(c => new GetJournalTrucksResponse()).As<GetJournalTrucksResponse>();
+            cb.Register(c => new GetJournalActivitiesResponse()).As<GetJournalActivitiesResponse>();
+            cb.Register(c => new GetSettingsResponse()).As<GetSettingsResponse>();
         }
     }
 }

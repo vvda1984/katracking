@@ -49,6 +49,7 @@
     <Compile Include="Application\KApplication.cs" />
     <Compile Include="Application\AppSettings.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="NameValueSettings.cs" />
     <Compile Include="Point.cs" />
     <Compile Include="DependencyResolver.cs" />
     <Compile Include="KException.cs" />

@@ -10,12 +10,13 @@ var KConfig = (function () {
         this.pingInterval = 3;
         this.requestTimeout = 30;
         this.enableMap = true;
-        this.mapZoom = 17;
-        this.acceptedAccuracy = 100;
+        this.defaultMapZoom = 17;
+        this.acceptedAccuracy = 150;
         this.acceptedDistance = 30;
-        this.getLocationInternal = 30;
+        this.getLocationInterval = 30;
         this.enableGoogleService = true;
         this.syncInterval = 5 * 60;
+        this.googleKey = "AIzaSyCD_ZRcJdEcKM3PEAAYKj7Fmyg-Pv2G-HQ";
     }
     KConfig.prototype.updateBaseURL = function () {
         var host = this.ipAddress;
@@ -43,13 +44,31 @@ var KConfig = (function () {
                 this.serviceName = value;
                 break;
             case "pingInterval":
-                this.pingInterval = parseInt(value);
+                this.pingInterval = app.utils.parseInt(value);
                 break;
             case "requestTimeout":
-                this.requestTimeout = parseInt(value);
+                this.requestTimeout = app.utils.parseInt(value);
                 break;
             case "enableMap":
-                this.enableMap = parseInt(value) == 1;
+                this.enableMap = app.utils.parseInt(value) == 1;
+                break;
+            case "enableGoogleService":
+                this.enableGoogleService = app.utils.parseInt(value) == 1;
+                break;
+            case "defaultMapZoom":
+                this.defaultMapZoom = app.utils.parseInt(value);
+                break;
+            case "acceptedAccuracy":
+                this.acceptedAccuracy = app.utils.parseInt(value);
+                break;
+            case "acceptedDistance":
+                this.acceptedDistance = app.utils.parseInt(value);
+                break;
+            case "acceptedDistance":
+                this.acceptedDistance = app.utils.parseInt(value);
+                break;
+            case "googleKey":
+                this.googleKey = value;
                 break;
         }
     };
@@ -356,8 +375,8 @@ var KNetwork = (function () {
     };
     KNetwork.prototype.getJournals = function (http, ionicLoading, ionicPopup, callback) {
         ionicLoading.show({ template: R.Loading, noBackdrop: false, });
-        if (app.network.isReady()) {
-            app.network.post(http, "getDriverJournals", { token: app.context.token, driverId: app.context.user.id }, function (result) {
+        if (app.serverAPI.isReady()) {
+            app.serverAPI.post(http, "getDriverJournals", { token: app.context.token, driverId: app.context.user.id }, function (result) {
                 ionicLoading.hide();
                 if (app.utils.isEmpty(result.errorMessage)) {
                     app.context.setJournalGroups(result.data.items, callback);
@@ -377,6 +396,9 @@ var KNetwork = (function () {
                 app.context.setJournalGroups(journals, callback);
             });
         }
+    };
+    KNetwork.prototype.getSettings = function (http, callback) {
+        app.serverAPI.post(http, "getSettings", { token: app.context.token, driverId: app.context.user.id }, callback);
     };
     KNetwork.prototype.submitActivity = function (http, request, important, callback) {
         var n = this;
@@ -411,6 +433,11 @@ var KNetwork = (function () {
         }
     };
     KNetwork.prototype.submitLocation = function (http, request, important, callback) {
+        if (request.accuracy > app.config.acceptedAccuracy) {
+            app.log.debug("Ignore (" + request.latitude.toString() + ", " + request.longitude.toString() + ", " + request.accuracy.toString() + ")");
+            callback(R.LocationNotCorrect);
+            return;
+        }
         var n = this;
         var sycnStatus = SyncStatus.Unsync;
         var errorMessage = null;
@@ -420,7 +447,7 @@ var KNetwork = (function () {
             });
         };
         if (n.isReady()) {
-            app.network.post(http, "addJournalLocation", request, function (response) {
+            app.serverAPI.post(http, "addJournalLocation", request, function (response) {
                 if (!app.utils.isEmpty(response.errorMessage)) {
                     if (important) {
                         callback(R.CannotConnectToServer);
@@ -516,12 +543,11 @@ var KNetwork = (function () {
     };
     KNetwork.prototype._startSyncTimer = function () {
         var n = this;
+        if (n._submitUnsyncDataFunction == undefined || n._submitUnsyncDataFunction == null)
+            return;
         n._curentTimer = setTimeout(function () {
-            if (n._syncJournalAction !== null) {
-                var queueNextSync_1 = function () {
-                    if (n._syncJournalAction !== null)
-                        n._startSyncTimer();
-                };
+            if (n._submitUnsyncDataFunction !== null) {
+                var queueNextSync_1 = function () { n._startSyncTimer(); };
                 if (n.isReady()) {
                     var data_2 = {
                         token: app.context.token,
@@ -530,12 +556,12 @@ var KNetwork = (function () {
                     };
                     var activityIds_2 = new Array();
                     var locationIds_2 = new Array();
-                    var submitAction_2 = function (d, ar, lr) {
+                    var submitFunction_1 = function (d, ar, lr) {
                         if (d.activities.length === 0 && d.locations.length === 0) {
                             queueNextSync_1();
                             return;
                         }
-                        n._syncJournalAction(d, function (errorMessage) {
+                        n._submitUnsyncDataFunction(d, function (errorMessage) {
                             app.log.error(errorMessage);
                             if (app.utils.isEmpty(errorMessage)) {
                                 app.db.updateActivitiesStatus(ar, SyncStatus.Sync, function (dbr) {
@@ -581,62 +607,109 @@ var KNetwork = (function () {
                                         locationIds_2.push(item.id);
                                         data_2.locations.push(location_2);
                                     }
-                                    if (n._syncJournalAction !== null)
-                                        submitAction_2(data_2, activityIds_2, locationIds_2);
+                                    if (n._submitUnsyncDataFunction !== null)
+                                        submitFunction_1(data_2, activityIds_2, locationIds_2);
                                 }
                             });
                         }
                     });
                 }
                 else {
-                    n._startSyncTimer();
+                    queueNextSync_1();
                 }
             }
-        }, app.config.getLocationInternal * 1000);
+        }, app.config.syncInterval * 1000);
     };
-    KNetwork.prototype.startSync = function (syncJournalAction) {
-        this._syncJournalAction = syncJournalAction;
+    KNetwork.prototype.startSync = function (submitFunction) {
+        this._submitUnsyncDataFunction = submitFunction;
+        if (this._curentTimer !== undefined && this._curentTimer !== null) {
+            clearTimeout(this._curentTimer);
+        }
         this._startSyncTimer();
     };
     KNetwork.prototype.stopSync = function () {
-        this._syncJournalAction = null;
+        this._submitUnsyncDataFunction = null;
         if (this._curentTimer !== undefined && this._curentTimer !== null) {
             clearTimeout(this._curentTimer);
+        }
+    };
+    KNetwork.prototype.getActivities = function (http, journalId, callback) {
+        var n = this;
+        if (n.isReady()) {
+            n.post(http, "getJournalActivities", { token: app.context.token, journalId: journalId, }, function (result) {
+                if (!app.utils.isEmpty(result.errorMessage)) {
+                    callback(result.errorMessage, null);
+                }
+                else {
+                    var activites = [];
+                    for (var i = 0; i < result.data.items.length; i++) {
+                        activites.push(result.data.items[i]);
+                    }
+                    callback(null, activites);
+                }
+            });
+        }
+        else {
+            app.db.getJournalActivities(journalId, function (result) {
+                var activites = [];
+                for (var i = 0; i < result.rows.length; i++) {
+                    var activity = JSON.parse(result.rows.item(i).value);
+                    activites.push(activity);
+                }
+                callback(null, activites);
+            });
         }
     };
     return KNetwork;
 }());
 var KMap = (function () {
     function KMap() {
+        this.curAcc = 0;
+        this.curLat = 0;
+        this.curLng = 0;
+        this.curMap = null;
     }
     KMap.prototype.createMap = function (elementId) {
-        return new google.maps.Map(document.getElementById(elementId), {
-            zoom: app.config.mapZoom,
-            //center: { lat: curlat, lng: curlng },
-            mapTypeId: google.maps.MapTypeId.ROADMAP,
-            zoomControl: false,
-            //zoomControlOptions: {
-            //    position: google.maps.ControlPosition.RIGHT_BOTTOM
-            //},
-            mapTypeControl: false,
-            //mapTypeControlOptions: {
-            //    style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-            //    position: google.maps.ControlPosition.BOTTOM_LEFT //BOTTOM_CENTER
-            //},
-            scaleControl: false,
-            streetViewControl: false,
-        });
+        this.curAccCircle = null;
+        this.curLocationMarker = null;
+        try {
+            this.curMap = new google.maps.Map(document.getElementById(elementId), {
+                zoom: app.config.defaultMapZoom,
+                center: { lat: this.curLat, lng: this.curLng },
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                zoomControl: false,
+                //zoomControlOptions: {
+                //    position: google.maps.ControlPosition.RIGHT_BOTTOM
+                //},
+                mapTypeControl: false,
+                //mapTypeControlOptions: {
+                //    style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+                //    position: google.maps.ControlPosition.BOTTOM_LEFT //BOTTOM_CENTER
+                //},
+                scaleControl: false,
+                streetViewControl: false,
+            });
+            return this.curMap;
+        }
+        catch (err) {
+            app.log.error(err);
+            return null;
+        }
     };
-    KMap.prototype.addCurrentLocation = function (map, inoicPopup) {
-        var km = this;
+    KMap.prototype.addCurrentLocation = function (map, ionicPopup) {
+        if (map == undefined || map == null)
+            return;
+        var m = this;
         var btn = document.createElement("div");
         btn.className = "item";
         btn.style.padding = "0px";
-        btn.style.borderRadius = "16px";
+        btn.style.border = "none";
+        //btn.style.borderRadius = "16px";
         btn.style.marginRight = "4px";
         btn.style.width = "32px";
         btn.style.height = "32px";
         btn.style.textAlign = "center";
+        btn.style.background = "transparent";
         var i = document.createElement("img");
         i.src = "img/cur-location.png";
         i.style.width = "28px";
@@ -649,25 +722,25 @@ var KMap = (function () {
         //btn.style.height = "32px";
         //btn.style.marginRight = "4px";
         btn.addEventListener("click", function () {
-            if (km.curLat === undefined || km.curLat === 0) {
-                km.getCurrentLocation(function (response) {
+            if (m.curLat === undefined || m.curLat === 0) {
+                m.getCurrentLocation(function (response) {
                     if (app.utils.isEmpty(response.errorMessage)) {
-                        map.setCenter({ lat: km.curLat, lng: km.curLng });
+                        map.setCenter({ lat: m.curLat, lng: m.curLng });
                     }
                     else {
-                        inoicPopup.alert({ title: R.Error, template: response.errorMessage, });
+                        ionicPopup.alert({ title: R.Error, template: response.errorMessage, });
                     }
                 });
             }
             else {
-                map.setCenter({ lat: km.curLat, lng: km.curLng });
+                map.setCenter({ lat: m.curLat, lng: m.curLng });
             }
         });
         map.controls[google.maps.ControlPosition.RIGHT_TOP].push(btn);
-        var point = new google.maps.LatLng(this.curLat, this.curLng);
-        var cradius = (this.curAcc > 500) ? 500 : this.curAcc;
-        this.curLocationMarker = this.addMarker(map, point, null, "marker-truck.png");
-        this.curAccCircle = new google.maps.Circle({
+        var point = new google.maps.LatLng(m.curLat, m.curLng);
+        var cradius = (this.curAcc > 500) ? 500 : m.curAcc;
+        m.curLocationMarker = this.addMarker(map, point, null, "marker-truck.png");
+        m.curAccCircle = new google.maps.Circle({
             center: point,
             radius: cradius,
             map: map,
@@ -677,6 +750,8 @@ var KMap = (function () {
         });
     };
     KMap.prototype.addMarkerInLatLng = function (map, lat, lng, title, iconName) {
+        if (map == undefined || map == null)
+            return null;
         var iconUrl = "img/" + iconName;
         var marker = new google.maps.Marker();
         marker.setPosition(new google.maps.LatLng(lat, lng));
@@ -693,6 +768,8 @@ var KMap = (function () {
         return marker;
     };
     KMap.prototype.addMarker = function (map, point, title, iconName) {
+        if (map == undefined || map == null)
+            return null;
         var iconUrl = "img/" + iconName;
         var marker = new google.maps.Marker();
         marker.setPosition(point);
@@ -771,6 +848,9 @@ var KMap = (function () {
                         m.curAccCircle.setRadius(acc > 500 ? 500 : acc);
                         m.curAccCircle.setCenter({ lat: lat, lng: lng });
                     }
+                    if (m.curMap != null) {
+                        m.curMap.setCenter({ lat: lat, lng: lng });
+                    }
                 }
                 callback({ lat: lat, lng: lng, acc: acc });
             }, function (err) {
@@ -793,11 +873,11 @@ var KMap = (function () {
         }
     };
     KMap.prototype._startGetLocationTimer = function () {
-        var _this = this;
-        _this._curentTimer = setTimeout(function () {
-            if (_this._submitLocation !== null) {
-                _this.getCurrentLocation(function (response) {
-                    _this._submitLocation(response.errorMessage, {
+        var m = this;
+        m._curentTimer = setTimeout(function () {
+            if (m._submitLocation !== null) {
+                m.getCurrentLocation(function (response) {
+                    m._submitLocation(response.errorMessage, {
                         token: app.context.token,
                         createdTS: app.utils.getCurrentDateTime(),
                         stopCount: 0,
@@ -808,16 +888,35 @@ var KMap = (function () {
                         driverId: app.context.user.id,
                         truckId: app.context.userContext.truck.id,
                     }, function () {
-                        if (_this._submitLocation !== null)
-                            _this._startGetLocationTimer();
+                        if (m._submitLocation !== null)
+                            m._startGetLocationTimer();
                     });
                 });
             }
-        }, app.config.getLocationInternal * 1000);
+        }, app.config.getLocationInterval * 1000);
     };
     KMap.prototype.startWatcher = function (submit) {
-        this._submitLocation = submit;
-        this._startGetLocationTimer();
+        var m = this;
+        m._submitLocation = submit;
+        if (m._curentTimer !== undefined && m._curentTimer !== null) {
+            clearTimeout(m._curentTimer);
+        }
+        ;
+        m.getCurrentLocation(function (response) {
+            m._submitLocation(response.errorMessage, {
+                token: app.context.token,
+                createdTS: app.utils.getCurrentDateTime(),
+                stopCount: 0,
+                latitude: response.lat,
+                longitude: response.lng,
+                accuracy: response.acc,
+                journalId: app.paramters.journal.id,
+                driverId: app.context.user.id,
+                truckId: app.context.userContext.truck.id,
+            }, function () {
+                m._startGetLocationTimer();
+            });
+        });
     };
     KMap.prototype.stopWatcher = function () {
         this._submitLocation = null;
@@ -834,14 +933,17 @@ var kapp = new (function () {
         this.log = new KLogger();
         this.utils = new KUtils();
         this.config = new KConfig();
-        this.network = new KNetwork();
+        this.serverAPI = new KNetwork();
         this.db = new LocalStorageDB();
         this.context = new KContext();
-        this.map = new KMap;
+        this.mapAPI = new KMap;
         this.paramters = new KParamter();
     }
     return KApp;
 }());
 var app = kapp;
+function initializeMap() {
+    //
+}
 
 //# sourceMappingURL=startup.js.map

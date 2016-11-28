@@ -117,5 +117,9 @@ namespace KLogistic.WebService
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "syncJournal", ResponseFormat = WebMessageFormat.Json)]
         BaseResponse SyncJournal(SyncRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "getJournalActivities", ResponseFormat = WebMessageFormat.Json)]
+        GetJournalActivitiesResponse GetJournalActivities(ServiceRequest request);
     }
 }

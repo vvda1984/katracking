@@ -22,8 +22,8 @@
         this.user = app.context.user;
         this.data = { journalGroups: app.context.getJournalGroups() };
         var ctrl = this;
-        app.network.startSync(function (data, callback) {
-            app.network.post(ctrl.$http, "syncJournal", data, function (response) {
+        app.serverAPI.startSync(function (data, callback) {
+            app.serverAPI.post(ctrl.$http, "syncJournal", data, function (response) {
                 callback(response.errorMessage);
             });
         });
@@ -73,7 +73,7 @@
 
     public refresh() {
         var mc = this;
-        app.network.getJournals(mc.$http, mc.$ionicLoading, mc.$ionicPopup, function () {
+        app.serverAPI.getJournals(mc.$http, mc.$ionicLoading, mc.$ionicPopup, function () {
             mc.data.journalGroups = app.context.getJournalGroups();
         });
     }
@@ -87,10 +87,16 @@
                     var journal = jg.journals[j];
                     if (journal.id === journalId) {
                         if (jg.isCurrent) {
+                            app.mapAPI.curAccCircle = null;
+                            app.mapAPI.curLocationMarker = null;
                             app.paramters.nextState = "mainScreen";
                             app.paramters.journal = journal;
-                            //this.$state.go('journalScreen');
                             this.$state.go('tab.dash');
+
+                            //test...
+                            //app.paramters.allowStartJournal = false;
+                            //this.$state.go('testMapScreen');
+
                         } else {                                                      
                             if (app.context.hasStartedJournal()) {
                                 app.paramters.allowStartJournal = false;

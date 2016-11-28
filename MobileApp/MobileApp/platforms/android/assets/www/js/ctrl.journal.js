@@ -1,24 +1,26 @@
-var JournalController = (function () {
-    function JournalController($ionicHistory) {
-        this.$ionicHistory = $ionicHistory;
-        app.log.debug(this.$ionicHistory.viewHistory());
-        var jc = this;
-        //jc.message = "This is test message!";
-        jc.R = R;
-        jc.journal = kapp.paramters.journal;
-        jc.allowViewMap = true;
-        //if (jc.allowViewMap) {
-        //    jc.map = app.map.createMap("journalMap");
-        //}
-    }
-    JournalController.prototype.updateMessage = function (message, type) {
-        $("#journalMessage").html(message);
-    };
-    JournalController.prototype.updateLocation = function (location) {
-        $("#currentLocation").html(location);
-    };
-    return JournalController;
-}());
+//class JournalController {
+//    public journal: any;
+//    public R: any;
+//    public map: any;
+//    public allowViewMap: boolean;
+//    constructor(private $ionicHistory: any) {
+//        app.log.debug(this.$ionicHistory.viewHistory());
+//        let jc = this;
+//        //jc.message = "This is test message!";
+//        jc.R = R;
+//        jc.journal = kapp.paramters.journal;
+//        jc.allowViewMap = true;
+//        //if (jc.allowViewMap) {
+//        //    jc.map = app.map.createMap("journalMap");
+//        //}
+//    }
+//    public updateMessage(message: string, type: number): void {
+//        $("#journalMessage").html(message);
+//    }
+//    public updateLocation(location: string): void {
+//        $("#currentLocation").html(location);
+//    }
+//}
 var JournalViewController = (function () {
     function JournalViewController($scope, $http, $ionicLoading, $ionicPopup, $ionicViewSwitcher, $state) {
         //app.log.debug(this.$ionicHistory.viewHistory());
@@ -32,23 +34,23 @@ var JournalViewController = (function () {
         jvc.R = R;
         jvc.journal = kapp.paramters.journal;
         jvc.allowStartJournal = kapp.paramters.allowStartJournal;
-        jvc.map = app.map.createMap("journalViewMap");
-        app.map.addCurrentLocation(jvc.map, this.$ionicPopup);
+        jvc.map = app.mapAPI.createMap("journalViewMap");
+        app.mapAPI.addCurrentLocation(jvc.map, this.$ionicPopup);
         var m = this.map;
         var j = this.journal;
         var points = [];
         var startPoint = new google.maps.LatLng(j.startLat, j.startLng);
         points.push(startPoint);
-        app.map.addMarker(m, startPoint, R.Start + ": " + j.startLocation, "marker-start.png");
+        app.mapAPI.addMarker(m, startPoint, R.Start + ": " + j.startLocation, "marker-start.png");
         for (var i = 0; i < j.stopPoints.length; i++) {
             var s = j.stopPoints[i];
             var point = new google.maps.LatLng(s.latitude, s.longitude);
             points.push(point);
-            app.map.addMarker(m, point, s.name, "marker-delivery.png");
+            app.mapAPI.addMarker(m, point, s.name, "marker-delivery.png");
         }
         var endPoint = new google.maps.LatLng(j.endLat, j.endLng);
         points.push(endPoint);
-        app.map.addMarker(m, endPoint, R.End + ": " + j.endLocation, "marker-end.png");
+        app.mapAPI.addMarker(m, endPoint, R.End + ": " + j.endLocation, "marker-end.png");
         this.renderRoute(points, 0, 0, 0, function () {
             var idle = google.maps.event.addListener(jvc.map, "idle", function (event) {
                 google.maps.event.removeListener(idle);
@@ -76,7 +78,7 @@ var JournalViewController = (function () {
                     strokeColor: app.utils.randomColor(),
                 }
             });
-            app.map.calcRoute(directionsDisplay, point1, point2, function (errorMessage, di, du) {
+            app.mapAPI.calcRoute(directionsDisplay, point1, point2, function (errorMessage, di, du) {
                 if (errorMessage == null) {
                     totalDistance += di;
                     totalDuration += du;
@@ -101,25 +103,27 @@ var JournalViewController = (function () {
         confirmPopup.then(function (res) {
             if (res) {
                 ctrl.$ionicLoading.show({ template: R.Processing, noBackdrop: false, });
-                app.map.getCurrentLocation(function (result) {
+                app.mapAPI.getCurrentLocation(function (result) {
                     if (!app.utils.isEmpty(result.errorMessage)) {
                         ctrl.$ionicLoading.hide();
                         ctrl.$ionicPopup.alert({ title: R.Error, template: result.errorMessage, });
                     }
                     else {
-                        app.network.submitActivity(ctrl.$http, {
+                        app.serverAPI.submitActivity(ctrl.$http, {
                             activityId: JournalActivity.BatDauHanhTrinh,
                             journalId: ctrl.journal.id,
                             driverId: app.context.user.id,
                             truckId: app.context.getTruckId(),
                             activityDetail: "",
-                            activityName: "BatDauHanhTrinh",
+                            activityName: "Bắt Đầu Hành Trình",
                             createdTS: app.utils.getCurrentDateTime(),
                             extendedData: null,
                             token: app.context.token,
                         }, true, function (errorMessage) {
                             ctrl.$ionicLoading.hide();
                             if (app.utils.isEmpty(errorMessage)) {
+                                app.mapAPI.curAccCircle = null;
+                                app.mapAPI.curLocationMarker = null;
                                 app.paramters.nextState = "mainScreen";
                                 ctrl.$state.go('tab.dash');
                             }
@@ -151,36 +155,49 @@ var JournalDashController = (function () {
         var ctrl = this;
         ctrl.R = R;
         ctrl.journal = kapp.paramters.journal;
-        app.map.curAccCircle = null;
-        app.map.curLocationMarker = null;
-        app.network.submitActivity(ctrl.$http, {
-            activityId: JournalActivity.TroLaiHanhTrinh,
-            journalId: ctrl.journal.id,
-            driverId: app.context.user.id,
-            truckId: app.context.getTruckId(),
-            activityDetail: "",
-            activityName: "Trở Lại Hành Trình",
-            createdTS: app.utils.getCurrentDateTime(),
-            extendedData: null,
-            token: app.context.token,
-        }, false, function (errorMessage) {
-        });
-        app.map.startWatcher(function (errorMessage, request, submitCompleted) {
+        //app.network.submitActivity(
+        //    ctrl.$http,
+        //    {
+        //        activityId: JournalActivity.TroLaiHanhTrinh,
+        //        journalId: ctrl.journal.id,
+        //        driverId: app.context.user.id,
+        //        truckId: app.context.getTruckId(),
+        //        activityDetail: "",
+        //        activityName: "Trở Lại Hành Trình",
+        //        createdTS: app.utils.getCurrentDateTime(),
+        //        extendedData: null,
+        //        token: app.context.token,
+        //    },
+        //    false,
+        //    function (errorMessage) {
+        //    });
+        app.mapAPI.startWatcher(function (errorMessage, request, submitCompleted) {
             if (!app.utils.isEmpty(errorMessage)) {
                 ctrl.updateLocation(R.CannotGetLocation);
+                submitCompleted();
             }
             else {
                 if (app.config.enableGoogleService) {
-                    app.map.getAddress(new google.maps.LatLng(request.latitude, request.longitude), function (address) {
+                    app.mapAPI.getAddress(new google.maps.LatLng(request.latitude, request.longitude), function (address) {
                         if (app.utils.isEmpty(address))
                             ctrl.updateLocation("Latitude: " + request.latitude.toString() + "  Longitude:" + request.longitude.toString());
-                        else
+                        else {
                             ctrl.updateLocation(address);
-                        app.network.submitLocation(ctrl.$http, request, false, function (errorMessage) { });
+                            request.address = address;
+                        }
+                        app.serverAPI.submitLocation(ctrl.$http, request, false, function (errorMessage) {
+                            if (!app.utils.isEmpty(errorMessage))
+                                app.log.error(errorMessage);
+                            submitCompleted();
+                        });
                     });
                 }
                 else {
-                    app.network.submitLocation(ctrl.$http, request, false, function (errorMessage) { });
+                    app.serverAPI.submitLocation(ctrl.$http, request, false, function (errorMessage) {
+                        if (!app.utils.isEmpty(errorMessage))
+                            app.log.error(errorMessage);
+                        submitCompleted();
+                    });
                 }
             }
         });
@@ -193,7 +210,7 @@ var JournalDashController = (function () {
         ctrl.$ionicPopup.confirm({ title: R.Confirm, template: R.ExitJournal + "?", }).then(function (res) {
             if (res) {
                 ctrl.$ionicLoading.show({ template: R.Processing, noBackdrop: false, });
-                app.network.submitActivity(ctrl.$http, {
+                app.serverAPI.submitActivity(ctrl.$http, {
                     activityId: JournalActivity.ThoatHanhTrinh,
                     journalId: ctrl.journal.id,
                     driverId: app.context.user.id,
@@ -205,7 +222,7 @@ var JournalDashController = (function () {
                     token: app.context.token,
                 }, false, function (errorMessage) {
                     ctrl.$ionicLoading.hide();
-                    app.map.stopWatcher();
+                    app.mapAPI.stopWatcher();
                     ctrl.$state.go(app.paramters.nextState);
                 });
             }
@@ -217,7 +234,7 @@ var JournalDashController = (function () {
             ctrl.$ionicPopup.confirm({ title: R.Confirm, template: activityAction + "?", }).then(function (res) {
                 if (res) {
                     ctrl.$ionicLoading.show({ template: R.Processing, noBackdrop: false, });
-                    app.network.submitActivity(ctrl.$http, {
+                    app.serverAPI.submitActivity(ctrl.$http, {
                         activityId: activityId,
                         journalId: ctrl.journal.id,
                         driverId: app.context.user.id,
@@ -260,7 +277,7 @@ var JournalDashController = (function () {
                 ]
             }).then(function (message) {
                 ctrl.$ionicLoading.show({ template: R.Processing, noBackdrop: false, });
-                app.network.submitActivity(ctrl.$http, {
+                app.serverAPI.submitActivity(ctrl.$http, {
                     activityId: activityId,
                     journalId: ctrl.journal.id,
                     driverId: app.context.user.id,
@@ -283,7 +300,7 @@ var JournalDashController = (function () {
         ctrl.$ionicPopup.confirm({ title: R.Confirm, template: R.EndJournal + "?", }).then(function (res) {
             if (res) {
                 ctrl.$ionicLoading.show({ template: R.Processing, noBackdrop: false, });
-                app.network.submitActivity(ctrl.$http, {
+                app.serverAPI.submitActivity(ctrl.$http, {
                     activityId: JournalActivity.KetThucHanhTrinh,
                     journalId: ctrl.journal.id,
                     driverId: app.context.user.id,
@@ -295,11 +312,18 @@ var JournalDashController = (function () {
                     token: app.context.token,
                 }, false, function (errorMessage) {
                     ctrl.$ionicLoading.hide();
-                    app.map.stopWatcher();
+                    app.mapAPI.stopWatcher();
                     ctrl.$state.go(app.paramters.nextState);
                 });
             }
         });
+    };
+    JournalDashController.prototype.goBack = function () {
+        var ctrol = this;
+        var nextState = app.paramters.nextState;
+        app.paramters.nextState = null;
+        ctrol.$ionicViewSwitcher.nextDirection("back");
+        ctrol.$state.go(nextState);
     };
     return JournalDashController;
 }());
@@ -314,13 +338,64 @@ var JournalMapController = (function () {
         var ctrl = this;
         ctrl.R = R;
         ctrl.journal = kapp.paramters.journal;
+        ctrl.map = app.mapAPI.createMap("journalViewMap");
+        app.mapAPI.addCurrentLocation(ctrl.map, ctrl.$ionicPopup);
+        var m = ctrl.map;
+        var j = ctrl.journal;
+        var points = [];
+        var startPoint = new google.maps.LatLng(j.startLat, j.startLng);
+        points.push(startPoint);
+        app.mapAPI.addMarker(m, startPoint, R.Start + ": " + j.startLocation, "marker-start.png");
+        var endPoint = new google.maps.LatLng(j.endLat, j.endLng);
+        points.push(endPoint);
+        app.mapAPI.addMarker(m, endPoint, R.End + ": " + j.endLocation, "marker-end.png");
+        var directionsDisplay = new google.maps.DirectionsRenderer();
+        directionsDisplay.setMap(m);
+        directionsDisplay.setPanel(document.getElementById("dvPanel"));
+        directionsDisplay.setOptions({ suppressMarkers: true });
+        app.mapAPI.calcRoute(directionsDisplay, startPoint, endPoint, function (errorMessage, di, du) { });
+        //var service = new google.maps.DistanceMatrixService();
+        //service.getDistanceMatrix({
+        //    origins: [startPoint],
+        //    destinations: [endPoint],
+        //    travelMode: google.maps.TravelMode.DRIVING,
+        //    unitSystem: google.maps.UnitSystem.METRIC,
+        //    avoidHighways: false,
+        //    avoidTolls: false
+        //}, function (response, status) {
+        //    if (status == google.maps.DistanceMatrixStatus.OK &&
+        //        response.rows[0].elements[0].status != google.maps.DistanceMatrixElementStatus.ZERO_RESULTS) {
+        //        //var distance = response.rows[0].elements[0].distance.text;
+        //        //var duration = response.rows[0].elements[0].duration.text;
+        //        //var dvDistance = document.getElementById("dvDistance");
+        //        //dvDistance.innerHTML = "";
+        //        //dvDistance.innerHTML += "Distance: " + distance + "<br />";
+        //        //dvDistance.innerHTML += "Duration:" + duration;
+        //    } else {
+        //        app.log.error("Unable to find the distance via road.");
+        //    }
+        //});
+        var idle = google.maps.event.addListener(ctrl.map, "idle", function (event) {
+            google.maps.event.removeListener(idle);
+            if (app.mapAPI.curLat != 0) {
+                ctrl.map.setCenter({ lat: app.mapAPI.curLat, lng: app.mapAPI.curLng });
+            }
+            else {
+                var b = new google.maps.LatLngBounds();
+                for (var i = 0; i < points.length; i++) {
+                    b.extend(points[i]);
+                }
+                b.getCenter();
+                ctrl.map.fitBounds(b);
+            }
+        });
     }
     JournalMapController.prototype.existJournal = function () {
         var ctrl = this;
         ctrl.$ionicPopup.confirm({ title: R.Confirm, template: R.ExitJournal + "?", }).then(function (res) {
             if (res) {
                 ctrl.$ionicLoading.show({ template: R.Processing, noBackdrop: false, });
-                app.network.submitActivity(ctrl.$http, {
+                app.serverAPI.submitActivity(ctrl.$http, {
                     activityId: JournalActivity.ThoatHanhTrinh,
                     journalId: ctrl.journal.id,
                     driverId: app.context.user.id,
@@ -332,11 +407,18 @@ var JournalMapController = (function () {
                     token: app.context.token,
                 }, false, function (errorMessage) {
                     ctrl.$ionicLoading.hide();
-                    app.map.stopWatcher();
+                    app.mapAPI.stopWatcher();
                     ctrl.$state.go(app.paramters.nextState);
                 });
             }
         });
+    };
+    JournalMapController.prototype.goBack = function () {
+        var ctrol = this;
+        var nextState = app.paramters.nextState;
+        app.paramters.nextState = null;
+        ctrol.$ionicViewSwitcher.nextDirection("back");
+        ctrol.$state.go(nextState);
     };
     return JournalMapController;
 }());
@@ -353,13 +435,11 @@ var JournalActivityController = (function () {
         ctrl.R = R;
         ctrl.journal = kapp.paramters.journal;
         ctrl._queryActivities = function () {
-            app.db.getJournalActivities(ctrl.journal.id, function (result) {
-                var activites = [];
-                for (var i = 0; i < result.rows.length; i++) {
-                    var activity = JSON.parse(result.rows.item(i).value);
-                    activites.push(activity);
-                }
-                ctrl.data.activities = activites;
+            app.serverAPI.getActivities(ctrl.$http, ctrl.journal.id, function (errorMessage, items) {
+                if (!app.utils.isEmpty(errorMessage))
+                    ctrl.$ionicPopup.alert({ title: R.Error, template: errorMessage, });
+                else
+                    ctrl.data.activities = items;
             });
         };
         ctrl._queryActivities();
@@ -369,7 +449,7 @@ var JournalActivityController = (function () {
         ctrl.$ionicPopup.confirm({ title: R.Confirm, template: R.ExitJournal + "?", }).then(function (res) {
             if (res) {
                 ctrl.$ionicLoading.show({ template: R.Processing, noBackdrop: false, });
-                app.network.submitActivity(ctrl.$http, {
+                app.serverAPI.submitActivity(ctrl.$http, {
                     activityId: JournalActivity.ThoatHanhTrinh,
                     journalId: ctrl.journal.id,
                     driverId: app.context.user.id,
@@ -381,7 +461,7 @@ var JournalActivityController = (function () {
                     token: app.context.token,
                 }, false, function (errorMessage) {
                     ctrl.$ionicLoading.hide();
-                    app.map.stopWatcher();
+                    app.mapAPI.stopWatcher();
                     ctrl.$state.go(app.paramters.nextState);
                 });
             }
@@ -390,6 +470,13 @@ var JournalActivityController = (function () {
     JournalActivityController.prototype.refresh = function () {
         var ctrl = this;
         ctrl._queryActivities();
+    };
+    JournalActivityController.prototype.goBack = function () {
+        var ctrol = this;
+        var nextState = app.paramters.nextState;
+        app.paramters.nextState = null;
+        ctrol.$ionicViewSwitcher.nextDirection("back");
+        ctrol.$state.go(nextState);
     };
     return JournalActivityController;
 }());

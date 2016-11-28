@@ -160,16 +160,22 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controllers\ConfigController.cs" />
+    <Compile Include="Interfaces\IConfigController.cs" />
+    <Compile Include="Models\SettingModel.cs" />
     <Compile Include="Models\SyncActivityModel.cs" />
     <Compile Include="Models\SyncLocationModel.cs" />
     <Compile Include="Models\JournalTruckModel.cs" />
     <Compile Include="Requests\ChangePasswordRequest.cs" />
+    <Compile Include="Requests\SubmitSettingsRequest.cs" />
     <Compile Include="Requests\SyncRequest.cs" />
     <Compile Include="Requests\SyncActivitiesRequest.cs" />
     <Compile Include="Requests\SyncLocationsRequest.cs" />
     <Compile Include="Requests\ServiceRequest.cs" />
     <Compile Include="Requests\UploadAttachmentRequest.cs" />
+    <Compile Include="Responses\GetJournalActivitiesResponse.cs" />
     <Compile Include="Responses\GetJournalTrucksResponse.cs" />
+    <Compile Include="Responses\GetSettingsResponse.cs" />
     <Compile Include="Startup\BehaviorExtension\NewtonsoftJsonBehavior.cs" />
     <Compile Include="Startup\BehaviorExtension\NewtonsoftJsonBehaviorExtension.cs" />
     <Compile Include="Startup\BehaviorExtension\NewtonsoftJsonContentTypeMapper.cs" />
