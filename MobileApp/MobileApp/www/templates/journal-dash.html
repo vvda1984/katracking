@@ -1,0 +1,85 @@
+﻿<ion-view>
+    <div class="bar bar-header bar-positive">
+        <button class="button button-icon icon ion-ios-arrow-left" ng-click="jdc.goBack()"></button>
+        <div class="h1 title">{{jdc.R.Journal}}</div>
+    </div>
+    <ion-content class="has-tabs-top has-header" overflow-scroll="false">
+        <div class="list">
+            <label class="item item-input">
+                <span class="input-label">{{jdc.R.Start}}</span>
+                <span class="input-label">{{jdc.journal.startLocation}}</span>
+            </label>
+
+            <label class="item item-input">
+                <span class="input-label">{{jdc.R.End}}</span>
+                <span class="input-label">{{jdc.journal.endLocation}}</span>
+            </label>
+
+            <div class="item item-icon-left">
+                <i class="icon ion-location"></i><p style="word-wrap: break-word;" id="currentLocation">60 Nguyen Dinh chieu, Quan 1, Ho chi Minh</p>
+            </div>
+        </div>
+
+        <div class="list padding">
+            <!--<label class="item item-input">
+                <span class="input-label">{{jdc.R.Start}}</span>
+                <span class="input-label">{{jdc.journal.startLocation}}</span>
+            </label>
+
+            <label class="item item-input">
+                <span class="input-label">{{jdc.R.End}}</span>
+                <span class="input-label">{{jdc.journal.endLocation}}</span>
+            </label>
+
+            <div class="item item-icon-left">
+                <i class="icon ion-location"></i><p style="word-wrap: break-word;" id="currentLocation">60 Nguyen Dinh chieu, Quan 1, Ho chi Minh</p>
+            </div>-->
+
+            <table style="border:0px;width:100%">
+                <tr>
+                    <td class="center-parent">
+                        <button class="button button-block button-calm" style="margin-right:4px;" ng-click="jdc.doActivity(2, 'Nhận Hàng')">Nhận Hàng</button>
+                    </td>
+                    <td class="center-parent">
+                        <button class="button button-block button-calm" style="margin-left:4px;" ng-click="jdc.doActivity(3, 'Xuất Phát')">Xuất Phát</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="center-parent">
+                        <button class="button button-block button-calm" style="margin-right:4px;" ng-click="jdc.doActivity(4, 'Báo Tắc Đường')">Báo Tắc Đường</button>
+                    </td>
+                    <td class="center-parent">
+                        <button class="button button-block button-calm" style="margin-left:4px;" ng-click="jdc.doActivity(5, 'Báo Xe Hỏng')">Báo Xe Hỏng</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="center-parent">
+                        <button class="button button-block button-calm" style="margin-right:4px;" ng-click="jdc.doActivity(6, 'Đến Điểm Trả Hàng')">Đến Điểm Trả Hàng</button>
+                    </td>
+                    <td class="center-parent">
+                        <button class="button button-block button-calm" style="margin-left:4px;" ng-click="jdc.doActivity(7, 'Bắt Đầu Trả Hàng')">Bắt Đầu Trả Hàng</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="center-parent">
+                        <button class="button button-block button-calm" style="margin-right:4px;" ng-click="jdc.doActivity(8, 'Kết Thúc Trả Hàng')">Kết Thúc Trả Hàng</button>
+                    </td>
+                    <td class="center-parent">
+                        <button class="button button-block button-calm" style="margin-left:4px;" ng-click="jdc.doActivity(9, 'Gửi Thông Báo', true)">Gửi Thông Báo</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="center-parent">
+                        <button class="button button-block button-assertive" style="margin-right:4px;" ng-click="jdc.existJournal()">Thoát Hành Trình</button>
+                    </td>
+                    <td class="center-parent" colspan="2">
+                        <button class="button button-block button-assertive" style="margin-left:4px;" ng-click="jdc.endJournal()">Kết Thúc Hành Trình</button>
+                    </td>
+                    <!--<td class="center-parent" colspan="2">
+                        <button class="button button-block button-assertive" ng-click="jdc.endJournal()">Kết Thúc Hành Trình</button>
+                    </td>-->
+                </tr>
+            </table>
+        </div>
+    </ion-content>
+</ion-view>
