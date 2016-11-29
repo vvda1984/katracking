@@ -23,25 +23,32 @@
                 <span class="input-label" style="white-space:normal;">{{jvc.journal.description}}</span>                
             </label>
             <label class="item item-input">
-                <span class="input-label">Từ</span>                
+                <span class="input-label">Từ (A)</span>                
                 <span class="input-label" style="white-space:normal;">{{jvc.journal.startLocation}}</span>                
             </label>
             <label class="item item-input">
-                <span class="input-label">Đến</span>
+                <span class="input-label">Đến (B)</span>
                 <span class="input-label" style="white-space:normal;">{{jvc.journal.endLocation}}</span>                
             </label>
             <label class="item item-input">
                 <span class="input-label">Ngày</span>
-                <span class="input-label" >{{jvc.journal.activeDate}}</span>
+                <span class="input-label" >{{jvc.data.activeDate}}</span>
             </label>
-            <label class="item item-input">
+            
+            <!--<div class="item item-divider item-icon-left item-balanced">
+                <i class="icon ion-navigate"></i>{{jvc.R.GooglePath}}
+            </div>-->
+            <div id="dvPanel">
+            </div>  
+
+            <!--<label class="item item-input">
                 <span class="input-label">Khoảng Cách</span>
                 <span class="input-label" id="distance"></span>
             </label>
             <label class="item item-input">
                 <span class="input-label">Thời Gian</span>
                 <span class="input-label" id="duration"></span>
-            </label>
+            </label>-->
 
             <!--<div class="item item-divider item-icon-left item-balanced">
                 <i class="icon ion-location"></i>{{jvc.R.StopLocations}}

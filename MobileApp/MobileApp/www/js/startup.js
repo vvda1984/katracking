@@ -16,6 +16,7 @@ var KConfig = (function () {
         this.getLocationInterval = 30;
         this.enableGoogleService = true;
         this.syncInterval = 5 * 60;
+        this.getAddressInterval = 5 * 60;
         this.googleKey = "AIzaSyCD_ZRcJdEcKM3PEAAYKj7Fmyg-Pv2G-HQ";
     }
     KConfig.prototype.updateBaseURL = function () {
@@ -787,29 +788,34 @@ var KMap = (function () {
     };
     KMap.prototype.calcRoute = function (directionsDisplay, startPoint, endPoint, callback) {
         var ms = this;
-        if (ms.directionsService == null)
-            ms.directionsService = new google.maps.DirectionsService();
-        ms.directionsService.route({
-            origin: startPoint,
-            destination: endPoint,
-            travelMode: google.maps.TravelMode.DRIVING
-        }, function (response, status) {
-            if (status == google.maps.DirectionsStatus.OK) {
-                app.log.debug(response);
-                directionsDisplay.setDirections(response);
-                var totalDistance = 0;
-                var totalDuration = 0;
-                var legs = response.routes[0].legs;
-                for (var i = 0; i < legs.length; ++i) {
-                    totalDistance += legs[i].distance.value;
-                    totalDuration += legs[i].duration.value;
+        try {
+            if (ms.directionsService == null)
+                ms.directionsService = new google.maps.DirectionsService();
+            ms.directionsService.route({
+                origin: startPoint,
+                destination: endPoint,
+                travelMode: google.maps.TravelMode.DRIVING
+            }, function (response, status) {
+                if (status == google.maps.DirectionsStatus.OK) {
+                    app.log.debug(response);
+                    directionsDisplay.setDirections(response);
+                    var totalDistance = 0;
+                    var totalDuration = 0;
+                    var legs = response.routes[0].legs;
+                    for (var i = 0; i < legs.length; ++i) {
+                        totalDistance += legs[i].distance.value;
+                        totalDuration += legs[i].duration.value;
+                    }
+                    callback(null, totalDistance, totalDuration);
                 }
-                callback(null, totalDistance, totalDuration);
-            }
-            else {
-                callback(R.GoogleAPIError + status, 0, 0);
-            }
-        });
+                else {
+                    callback(R.GoogleAPIError + status, 0, 0);
+                }
+            });
+        }
+        catch (err) {
+            callback(err.message, 0, 0);
+        }
     };
     KMap.prototype.getAddress = function (point, callback) {
         var geocoder = new google.maps.Geocoder();

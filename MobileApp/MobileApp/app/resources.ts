@@ -35,8 +35,8 @@
     StopLocations: "Các Điểm Giao Hàng",
     StartJournal: "Bắt Đầu Hành Trình",
     Journal: "Hành Trình",
-    Start: "Từ",
-    End: "Đến",
+    Start: "Khởi Hành",
+    End: "Điểm Đến",
     SelectJournal: "Chọn Hành Trình",
     JournalActivities: "Các Hoạt Động",
     ForgotPassword: "Quên Mật Khẩu",
@@ -56,5 +56,7 @@
     EndJournal: "Kết Thúc Hành Trình",
     UseGoogleService: "Dịch Vụ Google",    
     LocationNotCorrect: "Độ chính xác của vị trí vượt quá giới hạn cho phép",
+    GooglePath: "Đường Đi",
+    CurrentAddress: "Vị Trí Hiện Tại",
 };
 var R = language_en;

@@ -30,18 +30,19 @@ var JournalViewController = (function () {
         this.$ionicPopup = $ionicPopup;
         this.$ionicViewSwitcher = $ionicViewSwitcher;
         this.$state = $state;
-        var jvc = this;
-        jvc.R = R;
-        jvc.journal = kapp.paramters.journal;
-        jvc.allowStartJournal = kapp.paramters.allowStartJournal;
-        jvc.map = app.mapAPI.createMap("journalViewMap");
-        app.mapAPI.addCurrentLocation(jvc.map, this.$ionicPopup);
+        var ctrl = this;
+        ctrl.R = R;
+        ctrl.journal = kapp.paramters.journal;
+        ctrl.data = { activeDate: ctrl.journal.activeDate.replace(" 00:00:00", "") };
+        ctrl.allowStartJournal = kapp.paramters.allowStartJournal;
+        ctrl.map = app.mapAPI.createMap("journalViewMap");
+        app.mapAPI.addCurrentLocation(ctrl.map, this.$ionicPopup);
         var m = this.map;
         var j = this.journal;
         var points = [];
         var startPoint = new google.maps.LatLng(j.startLat, j.startLng);
         points.push(startPoint);
-        app.mapAPI.addMarker(m, startPoint, R.Start + ": " + j.startLocation, "marker-start.png");
+        //app.mapAPI.addMarker(m, startPoint, R.Start + ": " + j.startLocation, "marker-start.png");
         //for (let i = 0; i < j.stopPoints.length; i++) {
         //    var s = j.stopPoints[i];
         //    let point = new google.maps.LatLng(s.latitude, s.longitude);
@@ -50,17 +51,31 @@ var JournalViewController = (function () {
         //}
         var endPoint = new google.maps.LatLng(j.endLat, j.endLng);
         points.push(endPoint);
-        app.mapAPI.addMarker(m, endPoint, R.End + ": " + j.endLocation, "marker-end.png");
-        this.renderRoute(points, 0, 0, 0, function () {
-            var idle = google.maps.event.addListener(jvc.map, "idle", function (event) {
-                google.maps.event.removeListener(idle);
-                var b = new google.maps.LatLngBounds();
-                for (var i = 0; i < points.length; i++) {
-                    b.extend(points[i]);
-                }
-                b.getCenter();
-                jvc.map.fitBounds(b);
-            });
+        //app.mapAPI.addMarker(m, endPoint, R.End + ": " + j.endLocation, "marker-end.png");
+        //this.renderRoute(points, 0, 0, 0, function () {
+        //    var idle = google.maps.event.addListener(jvc.map, "idle", function (event) {
+        //        google.maps.event.removeListener(idle);             
+        //        let b = new google.maps.LatLngBounds();
+        //        for (let i = 0; i < points.length; i++) {
+        //            b.extend(points[i]);                    
+        //        }
+        //        b.getCenter();
+        //        jvc.map.fitBounds(b);
+        //    });            
+        //});
+        var directionsDisplay = new google.maps.DirectionsRenderer();
+        directionsDisplay.setMap(m);
+        directionsDisplay.setPanel(document.getElementById("dvPanel"));
+        //directionsDisplay.setOptions({ suppressMarkers: true });
+        app.mapAPI.calcRoute(directionsDisplay, startPoint, endPoint, function (errorMessage, di, du) { });
+        var idle = google.maps.event.addListener(ctrl.map, "idle", function (event) {
+            google.maps.event.removeListener(idle);
+            var b = new google.maps.LatLngBounds();
+            for (var i = 0; i < points.length; i++) {
+                b.extend(points[i]);
+            }
+            b.getCenter();
+            ctrl.map.fitBounds(b);
         });
     }
     JournalViewController.prototype.renderRoute = function (points, index, totalDistance, totalDuration, callback) {
@@ -140,14 +155,17 @@ var JournalViewController = (function () {
     return JournalViewController;
 }());
 var JournalDashController = (function () {
-    function JournalDashController($scope, $http, $ionicLoading, $ionicPopup, $ionicViewSwitcher, $state) {
+    function JournalDashController($scope, $timeout, $http, $ionicLoading, $ionicPopup, $ionicViewSwitcher, $state) {
         this.$scope = $scope;
+        this.$timeout = $timeout;
         this.$http = $http;
         this.$ionicLoading = $ionicLoading;
         this.$ionicPopup = $ionicPopup;
         this.$ionicViewSwitcher = $ionicViewSwitcher;
         this.$state = $state;
         var ctrl = this;
+        ctrl._lastAddress = null;
+        ctrl._getAddressIndicator = 100000;
         ctrl.R = R;
         ctrl.journal = kapp.paramters.journal;
         //app.network.submitActivity(
@@ -168,37 +186,44 @@ var JournalDashController = (function () {
         //    });
         app.mapAPI.startWatcher(function (errorMessage, request, submitCompleted) {
             if (!app.utils.isEmpty(errorMessage)) {
-                ctrl.updateLocation(R.CannotGetLocation);
+                ctrl.updateLocation(R.CannotGetLocation, 0, 0);
                 submitCompleted();
             }
             else {
-                if (app.config.enableGoogleService) {
-                    app.mapAPI.getAddress(new google.maps.LatLng(request.latitude, request.longitude), function (address) {
-                        if (app.utils.isEmpty(address))
-                            ctrl.updateLocation("Latitude: " + request.latitude.toString() + "  Longitude:" + request.longitude.toString());
-                        else {
-                            ctrl.updateLocation(address);
-                            request.address = address;
-                        }
-                        app.serverAPI.submitLocation(ctrl.$http, request, false, function (errorMessage) {
-                            if (!app.utils.isEmpty(errorMessage))
-                                app.log.error(errorMessage);
-                            submitCompleted();
-                        });
-                    });
-                }
-                else {
-                    app.serverAPI.submitLocation(ctrl.$http, request, false, function (errorMessage) {
+                var submitFunction_1 = function (a, r) {
+                    ctrl.updateLocation(a, r.latitude, r.longitude);
+                    if (!app.utils.isEmpty(a)) {
+                        ctrl._lastAddress = a;
+                    }
+                    r.address = ctrl._lastAddress;
+                    app.serverAPI.submitLocation(ctrl.$http, r, false, function (errorMessage) {
                         if (!app.utils.isEmpty(errorMessage))
                             app.log.error(errorMessage);
                         submitCompleted();
                     });
+                };
+                if (app.config.enableGoogleService) {
+                    var getAddressIndicator = app.utils.parseInt(app.config.getAddressInterval / app.config.getLocationInterval);
+                    if (ctrl._getAddressIndicator >= getAddressIndicator) {
+                        ctrl._getAddressIndicator = 0;
+                        app.mapAPI.getAddress(new google.maps.LatLng(request.latitude, request.longitude), function (address) {
+                            submitFunction_1(address, request);
+                        });
+                    }
+                    else {
+                        submitFunction_1(null, request);
+                    }
+                }
+                else {
+                    submitFunction_1(null, request);
                 }
             }
         });
     }
-    JournalDashController.prototype.updateLocation = function (location) {
-        $("#currentLocation").html(location);
+    JournalDashController.prototype.updateLocation = function (location, lat, lng) {
+        if (location != null)
+            $("#currentLocation").html(location);
+        //$("#currentLocationLatLng").html("Lat: " + lat.toString() + ", Lng: " + lng.toString());
     };
     JournalDashController.prototype.existJournal = function () {
         var ctrl = this;

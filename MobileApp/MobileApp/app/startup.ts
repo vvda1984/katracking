@@ -14,6 +14,7 @@ class KConfig {
     public acceptedDistance: number;
     public getLocationInterval: number;
     public enableGoogleService: boolean;
+    public getAddressInterval: number;
     public syncInterval: number;
     public googleKey: string;
 
@@ -35,6 +36,7 @@ class KConfig {
         this.getLocationInterval = 30;
         this.enableGoogleService = true;
         this.syncInterval = 5 * 60;
+        this.getAddressInterval = 5 * 60;
         this.googleKey = "AIzaSyCD_ZRcJdEcKM3PEAAYKj7Fmyg-Pv2G-HQ";
     }
 
@@ -877,31 +879,35 @@ class KMap {
 
     public calcRoute(directionsDisplay: google.maps.DirectionsRenderer, startPoint: google.maps.LatLng, endPoint: google.maps.LatLng, callback: any): any {
         var ms = this;
-        
-        if (ms.directionsService == null)
-            ms.directionsService = new google.maps.DirectionsService();
+        try {
+            if (ms.directionsService == null)
+                ms.directionsService = new google.maps.DirectionsService();
+            ms.directionsService.route(
+                {
+                    origin: startPoint,
+                    destination: endPoint,
+                    travelMode: google.maps.TravelMode.DRIVING
+                }, function (response, status) {
+                    if (status == google.maps.DirectionsStatus.OK) {
+                        app.log.debug(response);
+                        directionsDisplay.setDirections(response);
 
-        ms.directionsService.route({
-            origin: startPoint,
-            destination: endPoint,
-            travelMode: google.maps.TravelMode.DRIVING
-        }, function (response, status) {
-            if (status == google.maps.DirectionsStatus.OK) {
-                app.log.debug(response);
-                directionsDisplay.setDirections(response);
-
-                let totalDistance = 0;
-                let totalDuration = 0;
-                let legs = response.routes[0].legs;
-                for (var i = 0; i < legs.length; ++i) {
-                    totalDistance += legs[i].distance.value;
-                    totalDuration += legs[i].duration.value;
-                }
-                callback(null, totalDistance, totalDuration);
-            } else {
-                callback(R.GoogleAPIError + status, 0, 0);
-            }
-        });
+                        let totalDistance = 0;
+                        let totalDuration = 0;
+                        let legs = response.routes[0].legs;
+                        for (var i = 0; i < legs.length; ++i) {
+                            totalDistance += legs[i].distance.value;
+                            totalDuration += legs[i].duration.value;
+                        }
+                        callback(null, totalDistance, totalDuration);
+                    } else {
+                        callback(R.GoogleAPIError + status, 0, 0);
+                    }
+                });
+        }
+        catch (err) {
+            callback(err.message, 0, 0);
+        }
     }
 
     public getAddress(point: google.maps.LatLng, callback: (address: string) => any) {

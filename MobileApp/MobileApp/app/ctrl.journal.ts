@@ -26,7 +26,7 @@ class JournalViewController {
     public journal: any;
     public R: any;
     public map: any;
-  
+    public data: any;
     public allowStartJournal: any;
 
     constructor(
@@ -39,12 +39,13 @@ class JournalViewController {
 
         //app.log.debug(this.$ionicHistory.viewHistory());
 
-        var jvc = this;
-        jvc.R = R;
-        jvc.journal = kapp.paramters.journal;
-        jvc.allowStartJournal = kapp.paramters.allowStartJournal;
-        jvc.map = app.mapAPI.createMap("journalViewMap");
-        app.mapAPI.addCurrentLocation(jvc.map, this.$ionicPopup);
+        var ctrl = this;
+        ctrl.R = R;
+        ctrl.journal = kapp.paramters.journal;
+        ctrl.data = { activeDate: ctrl.journal.activeDate.replace(" 00:00:00", "")};
+        ctrl.allowStartJournal = kapp.paramters.allowStartJournal;
+        ctrl.map = app.mapAPI.createMap("journalViewMap");
+        app.mapAPI.addCurrentLocation(ctrl.map, this.$ionicPopup);
         
         let m = this.map;
         let j = this.journal;
@@ -52,31 +53,42 @@ class JournalViewController {
     
         let startPoint = new google.maps.LatLng(j.startLat, j.startLng);
         points.push(startPoint);      
-        app.mapAPI.addMarker(m, startPoint, R.Start + ": " + j.startLocation, "marker-start.png");
-
+        //app.mapAPI.addMarker(m, startPoint, R.Start + ": " + j.startLocation, "marker-start.png");
         //for (let i = 0; i < j.stopPoints.length; i++) {
         //    var s = j.stopPoints[i];
         //    let point = new google.maps.LatLng(s.latitude, s.longitude);
         //    points.push(point);
         //    app.mapAPI.addMarker(m, point, s.name, "marker-delivery.png");
         //}
-
         let endPoint = new google.maps.LatLng(j.endLat, j.endLng);
         points.push(endPoint)    
-        app.mapAPI.addMarker(m, endPoint, R.End + ": " + j.endLocation, "marker-end.png");
+        //app.mapAPI.addMarker(m, endPoint, R.End + ": " + j.endLocation, "marker-end.png");
 
-        this.renderRoute(points, 0, 0, 0, function () {
-            var idle = google.maps.event.addListener(jvc.map, "idle", function (event) {
-                google.maps.event.removeListener(idle);
-                                
-                let b = new google.maps.LatLngBounds();
-                for (let i = 0; i < points.length; i++) {
-                    b.extend(points[i]);                    
-                }
+        //this.renderRoute(points, 0, 0, 0, function () {
+        //    var idle = google.maps.event.addListener(jvc.map, "idle", function (event) {
+        //        google.maps.event.removeListener(idle);             
+        //        let b = new google.maps.LatLngBounds();
+        //        for (let i = 0; i < points.length; i++) {
+        //            b.extend(points[i]);                    
+        //        }
+        //        b.getCenter();
+        //        jvc.map.fitBounds(b);
+        //    });            
+        //});
 
-                b.getCenter();
-                jvc.map.fitBounds(b);
-            });            
+        let directionsDisplay = new google.maps.DirectionsRenderer();
+        directionsDisplay.setMap(m);
+        directionsDisplay.setPanel(document.getElementById("dvPanel"));
+        //directionsDisplay.setOptions({ suppressMarkers: true });
+        app.mapAPI.calcRoute(directionsDisplay, startPoint, endPoint, function (errorMessage, di, du) { });
+        var idle = google.maps.event.addListener(ctrl.map, "idle", function (event) {
+            google.maps.event.removeListener(idle);
+            let b = new google.maps.LatLngBounds();
+            for (let i = 0; i < points.length; i++) {
+                b.extend(points[i]);
+            }
+            b.getCenter();
+            ctrl.map.fitBounds(b);
         });
     }
 
@@ -168,10 +180,13 @@ class JournalViewController {
 
 class JournalDashController {
     public journal: any;
-    public R: any;   
+    public R: any;
+    private _getAddressIndicator: number;
+    private _lastAddress: string;
 
     constructor(
         private $scope: any,
+        private $timeout: angular.ITimeoutService,
         private $http: angular.IHttpService,
         private $ionicLoading: ionic.loading.IonicLoadingService,
         private $ionicPopup: ionic.popup.IonicPopupService,
@@ -179,6 +194,8 @@ class JournalDashController {
         private $state: any) {
 
         let ctrl = this;
+        ctrl._lastAddress = null;
+        ctrl._getAddressIndicator = 100000;
         ctrl.R = R;
         ctrl.journal = kapp.paramters.journal;
         //app.network.submitActivity(
@@ -200,34 +217,43 @@ class JournalDashController {
 
         app.mapAPI.startWatcher(function (errorMessage, request, submitCompleted) {
             if (!app.utils.isEmpty(errorMessage)) {
-                ctrl.updateLocation(R.CannotGetLocation);
+                ctrl.updateLocation(R.CannotGetLocation, 0, 0);
                 submitCompleted();
             } else {
-                if (app.config.enableGoogleService) {
-                    app.mapAPI.getAddress(new google.maps.LatLng(request.latitude, request.longitude), function (address) {
-                        if (app.utils.isEmpty(address))
-                            ctrl.updateLocation("Latitude: " + request.latitude.toString() + "  Longitude:" + request.longitude.toString());
-                        else {
-                            ctrl.updateLocation(address);
-                            request.address = address;
-                        }
-                        app.serverAPI.submitLocation(ctrl.$http, request, false, function (errorMessage) {
-                            if (!app.utils.isEmpty(errorMessage)) app.log.error(errorMessage)
-                            submitCompleted();
-                        });
-                    });
-                } else {
-                    app.serverAPI.submitLocation(ctrl.$http, request, false, function (errorMessage) {
-                        if(!app.utils.isEmpty(errorMessage)) app.log.error(errorMessage)
+                let submitFunction = function (a, r) {
+                    ctrl.updateLocation(a, r.latitude, r.longitude);
+                    if (!app.utils.isEmpty(a)) {
+                        ctrl._lastAddress = a;
+                    }
+                    r.address = ctrl._lastAddress;
+
+                    app.serverAPI.submitLocation(ctrl.$http, r, false, function (errorMessage) {
+                        if (!app.utils.isEmpty(errorMessage)) app.log.error(errorMessage)
                         submitCompleted();
                     });
+                };
+
+                if (app.config.enableGoogleService) {
+                    var getAddressIndicator = app.utils.parseInt(app.config.getAddressInterval / app.config.getLocationInterval);
+
+                    if (ctrl._getAddressIndicator >= getAddressIndicator) {
+                        ctrl._getAddressIndicator = 0;
+                        app.mapAPI.getAddress(new google.maps.LatLng(request.latitude, request.longitude), function (address) {
+                            submitFunction(address, request);
+                        });
+                    } else {
+                        submitFunction(null, request);
+                    }
+                } else {
+                    submitFunction(null, request);
                 }
             }
         });
     }
 
-    public updateLocation(location: string): void {
-        $("#currentLocation").html(location);
+    public updateLocation(location: string, lat: number, lng: number): void {
+        if(location!=null) $("#currentLocation").html(location);
+        //$("#currentLocationLatLng").html("Lat: " + lat.toString() + ", Lng: " + lng.toString());
     }
 
     public existJournal(): void {
@@ -373,7 +399,7 @@ class JournalMapController {
     public journal: any;
     public R: any;
     public map: google.maps.Map;    
-
+  
     constructor(private $scope: angular.IScope,
         private $http: angular.IHttpService,
         private $ionicLoading: ionic.loading.IonicLoadingService,
@@ -382,6 +408,7 @@ class JournalMapController {
         private $state: any) {
 
         var ctrl = this;
+      
         ctrl.R = R;
         ctrl.journal = kapp.paramters.journal;
         ctrl.map = app.mapAPI.createMap("journalViewMap");
