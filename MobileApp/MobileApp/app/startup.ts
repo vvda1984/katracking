@@ -19,7 +19,7 @@ class KConfig {
     public googleKey: string;
 
     constructor() {
-        this.enableDebug = true;
+        this.enableDebug = false;
         this.enableOffline = false;
         this.protocol = "http";
         this.ipAddress = "localhost/kas-test";
@@ -206,6 +206,10 @@ class KUtils {
         return Math.round(d * 100) / 100;
     }
 
+    public replace(search:string, replacement: string): string {
+        let reg = new RegExp("g");
+        return search.replace(reg, replacement);
+    }
 }
 
 class KContext {
@@ -238,6 +242,7 @@ class KContext {
     public setJournalGroups(journals: Array<any>, callback: any) {
         let journalGroups = [];
         let groupIndex = 1;
+        this._startedGroup = null;
         for (let i = 0; i < journals.length; i++) {
             let journal = journals[i];
             let groupName = journal.status == JournalStatus.Started ? R.Running : journal.activeDate.replace(" 00:00:00", "");
@@ -449,7 +454,6 @@ class KNetwork {
             app.serverAPI.post(http, "getDriverJournals", { token: app.context.token, driverId: app.context.user.id }, function (result) {
                 ionicLoading.hide();
                 if (app.utils.isEmpty(result.errorMessage)) {
-
                     app.context.setJournalGroups(result.data.items, callback);
                 }
                 else {

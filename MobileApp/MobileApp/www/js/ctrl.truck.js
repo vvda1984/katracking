@@ -55,6 +55,8 @@ var TruckDetailController = (function () {
         this.$ionicHistory = $ionicHistory;
         this.$state = $state;
         this.R = R;
+        var truck = kapp.paramters.truck;
+        //truck.description = app.utils.replace("\n", "<br/>");
         this.truck = kapp.paramters.truck;
     }
     TruckDetailController.prototype.save = function () {

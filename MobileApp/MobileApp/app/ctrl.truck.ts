@@ -69,6 +69,8 @@ class TruckDetailController {
         private $state: any) {
 
         this.R = R;
+        let truck = kapp.paramters.truck;
+        //truck.description = app.utils.replace("\n", "<br/>");
         this.truck = kapp.paramters.truck;
     }
 

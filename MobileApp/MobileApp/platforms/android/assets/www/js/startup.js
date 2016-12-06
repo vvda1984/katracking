@@ -1,6 +1,6 @@
 var KConfig = (function () {
     function KConfig() {
-        this.enableDebug = true;
+        this.enableDebug = false;
         this.enableOffline = false;
         this.protocol = "http";
         this.ipAddress = "localhost/kas-test";
@@ -172,6 +172,10 @@ var KUtils = (function () {
         var d = R * c;
         return Math.round(d * 100) / 100;
     };
+    KUtils.prototype.replace = function (search, replacement) {
+        var reg = new RegExp("g");
+        return search.replace(reg, replacement);
+    };
     return KUtils;
 }());
 var KContext = (function () {
@@ -189,6 +193,7 @@ var KContext = (function () {
     KContext.prototype.setJournalGroups = function (journals, callback) {
         var journalGroups = [];
         var groupIndex = 1;
+        this._startedGroup = null;
         for (var i = 0; i < journals.length; i++) {
             var journal = journals[i];
             var groupName = journal.status == JournalStatus.Started ? R.Running : journal.activeDate.replace(" 00:00:00", "");

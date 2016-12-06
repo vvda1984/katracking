@@ -263,6 +263,38 @@ module.exports = [
         "clobbers": [
             "SQLitePlugin"
         ]
+    },
+    {
+        "file": "plugins/cordova-plugin-locationservices/www/Coordinates.js",
+        "id": "cordova-plugin-locationservices.Coordinates",
+        "clobbers": [
+            "cordova.plugins.locationServices.Coordinates",
+            "plugin.locationServices.Coordinates"
+        ]
+    },
+    {
+        "file": "plugins/cordova-plugin-locationservices/www/PositionError.js",
+        "id": "cordova-plugin-locationservices.PositionError",
+        "clobbers": [
+            "cordova.plugins.locationServices.PositionError",
+            "plugin.locationServices.PositionError"
+        ]
+    },
+    {
+        "file": "plugins/cordova-plugin-locationservices/www/Position.js",
+        "id": "cordova-plugin-locationservices.Position",
+        "clobbers": [
+            "cordova.plugins.locationServices.PositionError",
+            "plugin.locationServices.PositionError"
+        ]
+    },
+    {
+        "file": "plugins/cordova-plugin-locationservices/www/LocationServices.js",
+        "id": "cordova-plugin-locationservices.LocationServices",
+        "clobbers": [
+            "cordova.plugins.locationServices.geolocation",
+            "plugin.locationServices.geolocation"
+        ]
     }
 ];
 module.exports.metadata = 
@@ -281,7 +313,8 @@ module.exports.metadata =
     "cordova-plugin-background-mode": "0.6.6-dev",
     "cordova-plugin-camera": "2.3.0",
     "cordova-plugin-dialogs": "1.3.0",
-    "cordova-sqlite-storage": "1.5.0"
+    "cordova-sqlite-storage": "1.5.0",
+    "cordova-plugin-locationservices": "2.1.0"
 };
 // BOTTOM OF METADATA
 });

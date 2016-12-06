@@ -200,7 +200,7 @@ namespace KLogistic.WebService
 
         public GetJournalHistoryResponse GetJournalByName(ServiceRequest request)
         {
-            return Run<ServiceRequest, GetJournalHistoryResponse>(request, (resp, db, session) =>
+            return Run<ServiceRequest, GetJournalHistoryResponse>(request, (resp, db) =>
             {                
                 string name = request.Name;
 
@@ -213,7 +213,7 @@ namespace KLogistic.WebService
                 if (journal == null)
                     throw new KException("Journal not found");
                 resp.Item = new JournalHistoryModel(journal, false);
-            });
+            }, true);
         }
 
         public BaseResponse UpdateJournal(ServiceRequest request)

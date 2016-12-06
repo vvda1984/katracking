@@ -9,18 +9,18 @@
     </div>
     <ion-content class="has-header has-footer" overflow-scroll="false">
         <div class="list">
-            <label class="item item-input">
-                <span class="input-label">Name</span>
+            <div class="item item-input">
+                <span class="input-label">Tên Xe:</span>
                 <span class="input-label">{{tdc.truck.name}}</span>
-            </label>
-            <label class="item item-input">
-                <span class="input-label">Name</span>
+            </div>
+            <div class="item item-input">
+                <span class="input-label">Số Xe</span>
                 <span class="input-label">{{tdc.truck.number}}</span>
-            </label>
-            <label class="item item-input">
-                <span class="input-label">Description</span>
-                <span class="input-label" style="white-space:normal;">{{tdc.truck.description}}</span>
-            </label>
+            </div>
+            <div class="item">
+                <!--<span class="input-label">Chi Tiết</span>-->
+                <p style="white-space:normal;">{{tdc.truck.description}}</p>
+            </div>
         </div>
     </ion-content>   
     <div class="bar bar-footer bar-positive" ng-click="tdc.save()">

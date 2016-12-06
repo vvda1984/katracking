@@ -51,6 +51,29 @@ angular.module("starter", ["ionic", "ngCordova", "starter.controllers", "starter
                     });
                 }
             });
+
+            try {
+                // Android customization
+                cordova.plugins.backgroundMode.setDefaults({ text: 'KA Logistic.' });
+                // Enable background mode
+                cordova.plugins.backgroundMode.enable();
+                // Called when background mode has been activated
+                cordova.plugins.backgroundMode.onactivate = function () {
+                    setTimeout(function () {
+                        // Modify the currently displayed notification
+                        cordova.plugins.backgroundMode.configure({
+                            text: 'Running in background.'
+                        });
+                    }, 5000);
+                };
+
+                cordova.plugins.backgroundMode.ondeactivate = function () {
+
+                };
+            }
+            catch (err) {
+                app.log.error(err);
+            }
         });
     })
     .config(($stateProvider: any, $urlRouterProvider: any) => {

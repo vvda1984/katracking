@@ -22,6 +22,7 @@ var language_en = {
     JournalList: "Danh Sách Hành Trình",
     JournalDetail: "Hành Trình",
     Trucks: "Danh Sách Xe",
+    ChangeTruck: "Thay Đổi Xe",
     SelectTruck: "Chọn Xe",
     Loading: "Loading...",
     TruckDetail: "Chi Tiết Xe",

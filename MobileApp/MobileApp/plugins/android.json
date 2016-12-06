@@ -45,6 +45,9 @@
         },
         "cordova-sqlite-storage": {
             "PACKAGE_NAME": "io.cordova.myapp56dff6"
+        },
+        "cordova-plugin-locationservices": {
+            "PACKAGE_NAME": "io.cordova.myapp56dff6"
         }
     },
     "dependent_plugins": {

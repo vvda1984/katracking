@@ -1,4 +1,8 @@
-﻿interface IKeyedCollection<T> {
+﻿interface CordovaPlugins {
+    backgroundMode: any;
+}
+
+interface IKeyedCollection<T> {
     Add(key: string, value: T);
     ContainsKey(key: string): boolean;
     Count(): number;
@@ -211,10 +215,10 @@ var predefinedActions = [
 
 enum JournalStatus {
     Actived = 0,
-    Started = 2,
-    Completed = 3,
-    Deleted = 4,
-    Cancelled = 5,
+    Started = 1,
+    Completed = 2,
+    Deleted = 3,
+    Cancelled = 4,
 }
 
 enum JournalActivity {

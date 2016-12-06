@@ -124,10 +124,10 @@ var predefinedActions = [
 var JournalStatus;
 (function (JournalStatus) {
     JournalStatus[JournalStatus["Actived"] = 0] = "Actived";
-    JournalStatus[JournalStatus["Started"] = 2] = "Started";
-    JournalStatus[JournalStatus["Completed"] = 3] = "Completed";
-    JournalStatus[JournalStatus["Deleted"] = 4] = "Deleted";
-    JournalStatus[JournalStatus["Cancelled"] = 5] = "Cancelled";
+    JournalStatus[JournalStatus["Started"] = 1] = "Started";
+    JournalStatus[JournalStatus["Completed"] = 2] = "Completed";
+    JournalStatus[JournalStatus["Deleted"] = 3] = "Deleted";
+    JournalStatus[JournalStatus["Cancelled"] = 4] = "Cancelled";
 })(JournalStatus || (JournalStatus = {}));
 var JournalActivity;
 (function (JournalActivity) {

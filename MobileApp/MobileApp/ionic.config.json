@@ -1,10 +1,11 @@
 {
-  "name": "io.cordova.myapp56dff6",
+  "name": "io.cordova.kalogistic",
   "app_id": "",
-  "gulpDependantTasks" : [
-    "tsc", "sass"
-  ],  
-   "gulpStartupTasks": [        
+  "gulpDependantTasks": [
+    "tsc",
+    "sass"
+  ],
+  "gulpStartupTasks": [
     "watch"
   ]
 }

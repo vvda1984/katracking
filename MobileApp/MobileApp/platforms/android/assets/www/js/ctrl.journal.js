@@ -243,7 +243,9 @@ var JournalDashController = (function () {
                 }, false, function (errorMessage) {
                     ctrl.$ionicLoading.hide();
                     app.mapAPI.stopWatcher();
-                    ctrl.$state.go(app.paramters.nextState);
+                    app.serverAPI.getJournals(ctrl.$http, ctrl.$ionicLoading, ctrl.$ionicPopup, function () {
+                        ctrl.$state.go(app.paramters.nextState);
+                    });
                 });
             }
         });
@@ -333,7 +335,9 @@ var JournalDashController = (function () {
                 }, false, function (errorMessage) {
                     ctrl.$ionicLoading.hide();
                     app.mapAPI.stopWatcher();
-                    ctrl.$state.go(app.paramters.nextState);
+                    app.serverAPI.getJournals(ctrl.$http, ctrl.$ionicLoading, ctrl.$ionicPopup, function () {
+                        ctrl.$state.go(app.paramters.nextState);
+                    });
                 });
             }
         });
