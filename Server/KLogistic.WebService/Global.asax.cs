@@ -19,7 +19,9 @@ namespace KLogistic
 
         protected void Session_Start(object sender, EventArgs e)
         {
-
+            string sessionId = Session.SessionID;
+            // Work around for error when app pool is circled:
+            // Session state has created a session id, but cannot save
         }
 
         protected void Application_BeginRequest(object sender, EventArgs e)

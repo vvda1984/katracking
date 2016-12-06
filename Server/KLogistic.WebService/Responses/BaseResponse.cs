@@ -25,6 +25,7 @@ namespace KLogistic.WebService
             cb.Register(c => new GetJourneyResponse()).As<GetJourneyResponse>();
             cb.Register(c => new GetStopPointResponse()).As<GetStopPointResponse>();
             cb.Register(c => new GetStopPointsResponse()).As<GetStopPointsResponse>();
+
             cb.Register(c => new GetTruckResponse()).As<GetTruckResponse>();
             cb.Register(c => new GetTrucksResponse()).As<GetTrucksResponse>();
             cb.Register(c => new GetUserResponse()).As<GetUserResponse>();
@@ -34,6 +35,11 @@ namespace KLogistic.WebService
             cb.Register(c => new GetJournalTrucksResponse()).As<GetJournalTrucksResponse>();
             cb.Register(c => new GetJournalActivitiesResponse()).As<GetJournalActivitiesResponse>();
             cb.Register(c => new GetSettingsResponse()).As<GetSettingsResponse>();
+            cb.Register(c => new GetJournalDriverResponse()).As<GetJournalDriverResponse>();
+            cb.Register(c => new GetJournalDriversResponse()).As<GetJournalDriversResponse>();
+            cb.Register(c => new GetJournalHistoryResponse()).As<GetJournalHistoryResponse>();
+            
+
         }
     }
 }

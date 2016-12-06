@@ -18,12 +18,13 @@ namespace KLogistic.WebService
 
         public ActivityModel() { }
 
-        public ActivityModel(Activity item) {
+        public ActivityModel(Activity item)
+        {
             Id = item.Id;
             Name = item.Name;
             Description = item.Description;
             CreatedTS = item.CreatedTS;
-            LastUpdatedTS = item.LastUpdatedTS;                        
+            LastUpdatedTS = item.LastUpdatedTS;
         }
     }
 }

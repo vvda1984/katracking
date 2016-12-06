@@ -30,6 +30,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net40\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.3.11\lib\net40\NLog.dll</HintPath>
       <Private>True</Private>
@@ -47,17 +51,19 @@
   <ItemGroup>
     <Compile Include="Application\KEnvironment.cs" />
     <Compile Include="Application\KApplication.cs" />
-    <Compile Include="Application\AppSettings.cs" />
-    <Compile Include="Constants.cs" />
-    <Compile Include="NameValueSettings.cs" />
-    <Compile Include="Point.cs" />
+    <Compile Include="Settings\AppSettings.cs" />
+    <Compile Include="Application\Constants.cs" />
+    <Compile Include="Settings\NameValueSettings.cs" />
+    <Compile Include="Geolocation\GeoPoint.cs" />
     <Compile Include="DependencyResolver.cs" />
-    <Compile Include="KException.cs" />
+    <Compile Include="Application\KException.cs" />
     <Compile Include="Logging\ILoggerFactory.cs" />
     <Compile Include="Logging\ILogger.cs" />
     <Compile Include="Logging\LoggerExtension.cs" />
     <Compile Include="Logging\LogManager.cs" />
-    <Compile Include="Utils\Utils.Geolocation.cs" />
+    <Compile Include="Utils\Serializer.cs" />
+    <Compile Include="Geolocation\Geolocation.cs" />
+    <Compile Include="Utils\TextDocument.cs" />
     <Compile Include="Utils\Utils.Encryption.cs" />
     <Compile Include="Utils\EnumHelper.cs" />
     <Compile Include="Utils\Utils.cs" />

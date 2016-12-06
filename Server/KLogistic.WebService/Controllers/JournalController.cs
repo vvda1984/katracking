@@ -4,11 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using System.Data.Entity;
+using System.Collections.Concurrent;
 
 namespace KLogistic.WebService
 {
     public partial class KAService
-    {       
+    {        
+        ConcurrentDictionary<long, JournalLocation> _caches = new ConcurrentDictionary<long, JournalLocation>();
+
         private Journal GetJournal(DataContext db, long journalid)
         {
             if (journalid <= 0)
@@ -23,22 +26,25 @@ namespace KLogistic.WebService
 
             return journal;
         }
-
-        private void AddJournalLocation(DataContext db, long journalId, long driverId, long truckId, double lat, double lng, double acc, string address, DateTime date)
-        {           
+                    
+        private JournalLocation AddJournalLocation(DataContext db, JournalLocation lastLocation, SyncLocationModel model, DateTime date)
+        {
             bool addNewLocation = true;
-            var journal = db.DBModel.Journals.Include(x => x.JournalLocations).FirstOrDefault(x => x.Id == journalId);
-            var lastLocation = journal.JournalLocations.LastOrDefault();
-            if (lastLocation != null)
+            if (lastLocation == null)
             {
-                var distance = Utils.CalcDistance(lat, lng, lastLocation.Latitude, lastLocation.Longitude);
-                if (distance < Constants.AcceptedDistance)
+                var journal = db.DBModel.Journals.Include(x => x.JournalLocations).FirstOrDefault(x => x.Id == model.JournalId);
+                lastLocation = journal.JournalLocations.Count() > 0 ? journal.JournalLocations.LastOrDefault() : null;
+                if (lastLocation != null)
                 {
-                    lastLocation.StopCount++;
-                    lastLocation.LastUpdatedTS = date;
-                    if (!string.IsNullOrEmpty(address))
-                        lastLocation.Address = address;
-                    addNewLocation = false;
+                    var distance = Geolocation.CalcDistance(model.Latitude, model.Longitude, lastLocation.Latitude, lastLocation.Longitude);
+                    if (distance < Constants.AcceptedDistance)
+                    {
+                        lastLocation.StopCount += model.StopCount;
+                        lastLocation.LastUpdatedTS = date;
+                        if (!string.IsNullOrEmpty(model.Address))
+                            lastLocation.Address = model.Address;
+                        addNewLocation = false;
+                    }
                 }
             }
 
@@ -46,19 +52,21 @@ namespace KLogistic.WebService
             {
                 JournalLocation location = new JournalLocation
                 {
-                    Accuracy = acc,
-                    Latitude = lat,
-                    Longitude = lng,
+                    Accuracy = model.Accuracy,
+                    Latitude = model.Latitude,
+                    Longitude = model.Longitude,
                     CreatedTS = date,
                     LastUpdatedTS = date,
-                    UserId = driverId,
-                    JournalId = journalId,
-                    TruckId = truckId,
-                    StopCount = 0,
-                    Address = address,
+                    UserId = model.DriverId,
+                    JournalId = model.JournalId,
+                    TruckId = model.TruckId,
+                    StopCount = model.StopCount,
+                    Address = model.Address,
                 };
                 db.DBModel.JournalLocations.Add(location);
+                lastLocation = location;
             }
+            return lastLocation;
         }
 
         private void AddJournalActivity(DataContext db, long activityId, string activityMessage, DateTime date, long journalId, long driverId, long truckId)
@@ -126,7 +134,7 @@ namespace KLogistic.WebService
             }
         }
 
-        private JournalModel CreateJournalModel(Journal journal, bool includeActivity = false, bool includeAttachment = false, bool includeStopPoint = false, bool includeDriver = false)
+        private JournalModel CreateJournalModel(DataContext db, Journal journal, bool includeActivity = false, bool includeAttachment = false, bool includeStopPoint = false, bool includeDriver = false)
         {
             var item = new JournalModel(journal);
             if (includeActivity)
@@ -143,7 +151,10 @@ namespace KLogistic.WebService
 
             if (includeDriver)
                 foreach (var i in journal.JournalDrivers)
-                    item.Drivers.Add(new JournalDriverModel(i));
+                {
+                    var driver = db.GetDriver(i.UserId);
+                    item.Drivers.Add(new JournalDriverModel(i, driver));
+                }
 
             return item;
         }
@@ -160,11 +171,12 @@ namespace KLogistic.WebService
 
 
                 resp.Items = new List<JournalModel>();
-                var query = (status != null) ?
+                var query = (status == null) ? 
                         db.DBModel.Journals.Where(x => x.Status != JournalStatus.Deleted) :
                         db.DBModel.Journals.Where(x => x.Status == (JournalStatus)status);
+                var array = query.ToArray();
                 foreach (var journal in query)
-                    resp.Items.Add(CreateJournalModel(journal, includeActivity, includeAttachment, includeStopPoint, includeDriver));
+                    resp.Items.Add(CreateJournalModel(db, journal, includeActivity, includeAttachment, includeStopPoint, includeDriver));
             });
         }
 
@@ -182,8 +194,26 @@ namespace KLogistic.WebService
 
 
                 var journal = GetJournal(db, journalid);
-                resp.item = CreateJournalModel(journal, includeActivity, includeAttachment, includeStopPoint, includeDriver);
+                resp.item = CreateJournalModel(db, journal, includeActivity, includeAttachment, includeStopPoint, includeDriver);
         });
+        }
+
+        public GetJournalHistoryResponse GetJournalByName(ServiceRequest request)
+        {
+            return Run<ServiceRequest, GetJournalHistoryResponse>(request, (resp, db, session) =>
+            {                
+                string name = request.Name;
+
+                var journal = db.DBModel.Journals
+                   .Include(x => x.JournalActivities)
+                   .Include(x => x.JournalStopPoints)
+                   .Include(x => x.JournalLocations)
+                   .FirstOrDefault(x => string.Compare(x.Name, name, StringComparison.OrdinalIgnoreCase) == 0);
+
+                if (journal == null)
+                    throw new KException("Journal not found");
+                resp.Item = new JournalHistoryModel(journal, false);
+            });
         }
 
         public BaseResponse UpdateJournal(ServiceRequest request)
@@ -206,6 +236,9 @@ namespace KLogistic.WebService
                 int status = request.Status != null ? request.Status.Value : -1;
                 string extendedData = request.ExtendedData;
                 string description = request.Description;
+                string referenceCode = request.ReferenceCode;
+                string estimatedDuration = request.EstimatedDuration;
+                string estimatedDistance = request.EstimatedDistance;
 
                 if (name != null) journal.Name = name;
                 if (description != null) journal.Description = description;
@@ -215,9 +248,12 @@ namespace KLogistic.WebService
                 if (endLocation != null) journal.EndLocation = endLocation;
                 if (endLat > 0) journal.EndLat = endLat;
                 if (endLng > 0) journal.EndLng = endLng;
-                if (activeDate != null) journal.ActiveDate = DateTime.ParseExact(request.Dob, "yyyy-MM-dd", null);
+                if (activeDate != null) journal.ActiveDate = DateTime.ParseExact(request.ActiveDate, "yyyy-MM-dd", null);
                 if (extendedData != null) journal.ExtendedData = extendedData;
                 if (status >= 0) journal.Status = (JournalStatus)status;
+                if (referenceCode != null) journal.ReferenceCode = referenceCode;
+                if (estimatedDuration != null) journal.EstimatedDuration = estimatedDuration;
+                if (estimatedDistance != null) journal.EstimatedDistance = estimatedDistance;
 
                 journal.LastUpdatedTS = DateTime.Now;
             });
@@ -241,6 +277,9 @@ namespace KLogistic.WebService
                 int status = request.Status != null ? request.Status.Value : -1;
                 string extendedData = request.ExtendedData;
                 string description = request.Description;
+                string referenceCode = request.ReferenceCode;
+                string estimatedDuration = request.EstimatedDuration;
+                string estimatedDistance = request.EstimatedDistance;
 
                 var journal = new Journal();
 
@@ -257,6 +296,10 @@ namespace KLogistic.WebService
                 journal.Status = (JournalStatus)status;
                 journal.CreatedTS = DateTime.Now;
                 journal.LastUpdatedTS = DateTime.Now;
+                journal.Status = JournalStatus.Actived;
+                journal.ReferenceCode = referenceCode;
+                journal.EstimatedDuration = estimatedDuration;
+                journal.EstimatedDistance = estimatedDistance;
 
                 journal.Validate();
 
@@ -277,6 +320,31 @@ namespace KLogistic.WebService
                 var journal = GetJournal(db, journalid);
                 if (journal.Status == JournalStatus.Actived)
                 {
+                    var stopPoints = journal.JournalStopPoints.ToArray();
+                    journal.JournalStopPoints.Clear();
+                    foreach (var i in stopPoints)
+                        db.DBModel.JournalStopPoints.Remove(i);
+
+                    var activities = journal.JournalActivities.ToArray();
+                    journal.JournalActivities.Clear();
+                    foreach (var i in activities)
+                        db.DBModel.JournalActivities.Remove(i);
+
+                    var journalAttachments = journal.JournalAttachments.ToArray();
+                    journal.JournalAttachments.Clear();
+                    foreach (var i in journalAttachments)
+                        db.DBModel.JournalAttachments.Remove(i);
+
+                    var journalDrivers = journal.JournalDrivers.ToArray();
+                    journal.JournalDrivers.Clear();
+                    foreach (var i in journalDrivers)
+                        db.DBModel.JournalDrivers.Remove(i);
+
+                    var locations = journal.JournalLocations.ToArray();
+                    journal.JournalLocations.Clear();
+                    foreach (var i in locations)
+                        db.DBModel.JournalLocations.Remove(i);
+
                     db.DBModel.Journals.Remove(journal);
                 }
                 else
@@ -313,20 +381,34 @@ namespace KLogistic.WebService
             return Run<ServiceRequest, GetJourneyResponse>(request, (resp, db, session) =>
             {
                 ValidateParam(request.JournalId);
-                long journalid = request.JournalId.Value;
+                long journalId = request.JournalId.Value;
 
                 ValidateParam(request.DriverId);
-                long driverid = request.DriverId.Value;
+                long driverId = request.DriverId.Value;
 
                 ValidateParam(request.TruckId);
-                long truckid = request.TruckId.Value;
+                long truckId = request.TruckId.Value;
 
                 double lat = request.Latitude.Value;
                 double lng = request.Longitude.Value;
                 double acc = request.Accuracy.Value;
-
+                
                 var date = request.CreatedTS != null ? DateTime.ParseExact(request.CreatedTS, "yyyy-MM-dd HH:mm:ss", null) : DateTime.Now;
-                AddJournalLocation(db, journalid, driverid, truckid, lat, lng, acc, request.Address, date);   
+                AddJournalLocation(
+                    db,
+                    null,
+                    new SyncLocationModel
+                    {
+                        DriverId = driverId,
+                        TruckId = truckId,
+                        JournalId = journalId,
+                        Accuracy = acc,
+                        Latitude = lat,
+                        Longitude = lng,
+                        Address = request.Address,
+                        StopCount = request.StopCount != null ? request.StopCount.Value : 0,
+                    },
+                    date);
             });
         }
 
@@ -349,6 +431,7 @@ namespace KLogistic.WebService
                         LastLat = journalLocation.Latitude,
                         LastLng = journalLocation.Longitude,
                         LastStopCount = journalLocation.StopCount,
+                        LastAddress = journalLocation.Address,
 
                         JournalId = journal.Id,
                         TruckId = truck.Id,
@@ -547,7 +630,21 @@ namespace KLogistic.WebService
                 var date = request.CreatedTS != null ? DateTime.ParseExact(request.CreatedTS, "yyyy-MM-dd HH:mm:ss", null) : DateTime.Now;
 
                 AddJournalActivity(db, activityId, activityMessage, date, journalId, driverId, truckId);
-                AddJournalLocation(db, journalId, driverId, truckId, lat, lng, acc, request.Address, date);
+                AddJournalLocation(
+                    db,
+                    null,
+                    new SyncLocationModel
+                    {
+                        DriverId = driverId,
+                        TruckId = truckId,
+                        JournalId = journalId,
+                        Accuracy = acc,
+                        Latitude = lat,
+                        Longitude = lng,
+                        Address = request.Address,
+                        StopCount = request.StopCount != null ? request.StopCount.Value : 0,
+                    },
+                    date);
             });
         }
 
@@ -588,7 +685,7 @@ namespace KLogistic.WebService
 
                 var journals = query.ToArray();
                 foreach (var journal in journals)
-                    resp.Items.Add(CreateJournalModel(journal, includeActivity, includeAttachment, true, includeDriver));
+                    resp.Items.Add(CreateJournalModel(db, journal, includeActivity, includeAttachment, true, includeDriver));
             });
         }
 
@@ -608,10 +705,11 @@ namespace KLogistic.WebService
         {
             return Run<SyncLocationsRequest, BaseResponse>(request, (resp, db, session) =>
             {
+                JournalLocation lastLocation = null;
                 foreach (var item in request.Items)
                 {
                     var date = item.CreatedTS != null ? DateTime.ParseExact(item.CreatedTS, "yyyy-MM-dd HH:mm:ss", null) : DateTime.Now;
-                    AddJournalLocation(db, item.JournalId, item.DriverId, item.TruckId, item.Latitude, item.Longitude, item.Accuracy, item.Address, date);
+                    lastLocation = AddJournalLocation(db, lastLocation, item, date);
                 }
             });
         }
@@ -620,10 +718,11 @@ namespace KLogistic.WebService
         {
             return Run<SyncRequest, BaseResponse>(request, (resp, db, session) =>
             {
+                JournalLocation lastLocation = null;
                 foreach (var item in request.Locations)
                 {
                     var date = item.CreatedTS != null ? DateTime.ParseExact(item.CreatedTS, "yyyy-MM-dd HH:mm:ss", null) : DateTime.Now;
-                    AddJournalLocation(db, item.JournalId, item.DriverId, item.TruckId, item.Latitude, item.Longitude, item.Accuracy, item.Address, date);
+                    lastLocation = AddJournalLocation(db, lastLocation, item, date);
                 }
 
                 foreach (var item in request.Activities)
@@ -643,6 +742,23 @@ namespace KLogistic.WebService
                 resp.Items = new List<JournalActivityModel>();
                 foreach (var item in activities)
                     resp.Items.Add(new JournalActivityModel(item));
+            });
+        }        
+
+        public GetJournalHistoryResponse GetJournalHistory(ServiceRequest request)
+        {
+            return Run<ServiceRequest, GetJournalHistoryResponse>(request, (resp, db, session) =>
+            {
+                long journalId = ValidateParamLong(request.JournalId, "journalId");
+                var journal = db.DBModel.Journals
+                    .Include(x => x.JournalActivities)
+                    .Include(x => x.JournalStopPoints)
+                    .Include(x => x.JournalLocations)
+                    .FirstOrDefault(x => x.Id == journalId);
+
+                if (journal == null)
+                    throw new KException("Journal not found");
+                resp.Item = new JournalHistoryModel(journal);
             });
         }
     }

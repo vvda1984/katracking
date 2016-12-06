@@ -44,7 +44,7 @@ namespace KLogistic.WebService
         public string EndLocation { get; set; }
 
         [DataMember(Name = "endLat")]
-        public double EndLat { get; set; }
+        public double EndLat { get; set; }        
 
         [DataMember(Name = "endLng")]
         public double EndLng { get; set; }
@@ -70,8 +70,14 @@ namespace KLogistic.WebService
         [DataMember(Name = "lastLng")]
         public double LastLng { get; set; }
 
+        [DataMember(Name = "lastAddress")]
+        public string LastAddress { get; set; }
+
         [DataMember(Name = "lastStopCount")]
         public long LastStopCount { get; set; }
+
+        [DataMember(Name = "warningMessage")]
+        public string WarningMessage { get; set; }
 
         public JournalTruckModel() { }
     }

@@ -1,5 +1,4 @@
 ﻿using KLogistic.Data;
-using System;
 using System.Runtime.Serialization;
 
 namespace KLogistic.WebService
@@ -19,9 +18,12 @@ namespace KLogistic.WebService
         [DataMember(Name = "status")]
         public int Status { get; set; }
 
+        [DataMember(Name = "driver")]
+        public DriverModel Driver { get; set; }
+
         public JournalDriverModel() { }
 
-        public JournalDriverModel(JournalDriver item)
+        public JournalDriverModel(JournalDriver item, Driver driver)
         {
             JournalId = item.JournalId;
             DriverId = item.UserId;
@@ -29,6 +31,8 @@ namespace KLogistic.WebService
             Status = (int)item.Status;
             CreatedTS = item.CreatedTS;
             LastUpdatedTS = item.LastUpdatedTS;
+            if (driver != null)
+                Driver = new DriverModel(driver);
         }
     }
 }

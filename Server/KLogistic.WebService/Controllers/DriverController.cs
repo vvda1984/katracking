@@ -69,9 +69,9 @@ namespace KLogistic.WebService
                 if (phone != null) driver.Phone = phone;
                 if (email != null) driver.Email = email;
                 if (note != null) driver.Note = note;
-                if (licenseNo != null) driver.Note = licenseNo;
-                if (classType != null) driver.Note = classType;
-                if (issuedPlace != null) driver.Note = issuedPlace;
+                if (licenseNo != null) driver.LicenseNo = licenseNo;
+                if (classType != null) driver.ClassType = classType;
+                if (issuedPlace != null) driver.IssuedPlace = issuedPlace;
                 if (expiredDate != null) driver.ExpiredDate = DateTime.ParseExact(request.ExpiredDate, "yyyy-MM-dd", null);
                 if (issuedDate != null) driver.IssuedDate = DateTime.ParseExact(request.IssuedDate, "yyyy-MM-dd", null);
                 if (status != null) driver.Status = (Status)status.Value;
@@ -139,7 +139,7 @@ namespace KLogistic.WebService
                 //driver.ExpiredDate = DateTime.ParseExact(request.ExpiredDate, "yyyy-MM-dd", null);
                 //driver.IssuedDate = DateTime.ParseExact(request.IssuedDate, "yyyy-MM-dd", null);
 
-                db.DBModel.Drivers.Add(driver);
+                db.AddDriver(driver);
                 db.SaveChanges();
                 resp.Item = new DriverModel(driver);
             }, false);
@@ -201,7 +201,7 @@ namespace KLogistic.WebService
 
                 if (driver.Status == Status.Inactived)
                 {
-                    db.DBModel.Drivers.Remove(driver);
+                    db.RemoveDriver(driver);
                 }
                 else
                 {

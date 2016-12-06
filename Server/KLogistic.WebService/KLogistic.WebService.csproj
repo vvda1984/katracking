@@ -161,7 +161,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\ConfigController.cs" />
+    <Compile Include="Controllers\JournalDriverController.cs" />
     <Compile Include="Interfaces\IConfigController.cs" />
+    <Compile Include="Models\ExtendedDataModel.cs" />
+    <Compile Include="Models\JournalHistoryModel.cs" />
     <Compile Include="Models\SettingModel.cs" />
     <Compile Include="Models\SyncActivityModel.cs" />
     <Compile Include="Models\SyncLocationModel.cs" />
@@ -173,7 +176,10 @@
     <Compile Include="Requests\SyncLocationsRequest.cs" />
     <Compile Include="Requests\ServiceRequest.cs" />
     <Compile Include="Requests\UploadAttachmentRequest.cs" />
+    <Compile Include="Responses\GetJournalDriversResponse.cs" />
+    <Compile Include="Responses\GetJournalDriverResponse.cs" />
     <Compile Include="Responses\GetJournalActivitiesResponse.cs" />
+    <Compile Include="Responses\GetJournalHistoryResponse.cs" />
     <Compile Include="Responses\GetJournalTrucksResponse.cs" />
     <Compile Include="Responses\GetSettingsResponse.cs" />
     <Compile Include="Startup\BehaviorExtension\NewtonsoftJsonBehavior.cs" />

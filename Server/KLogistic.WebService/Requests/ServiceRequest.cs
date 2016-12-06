@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace KLogistic.WebService
@@ -143,5 +144,20 @@ namespace KLogistic.WebService
 
         [DataMember]
         public string CreatedTS { get; set; }
+
+        [DataMember]
+        public int? StopCount { get; set; }
+
+        [DataMember]
+        public string ReferenceCode { get; set; }
+
+        [DataMember]
+        public string EstimatedDuration { get; set; }
+
+        [DataMember]
+        public string EstimatedDistance { get; set; }
+
+        [DataMember(Name = "extendedProperties")]
+        public List<ExtendedDataModel> ExtendedProperties { get; set; }
     }
 }

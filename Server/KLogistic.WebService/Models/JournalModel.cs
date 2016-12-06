@@ -85,6 +85,11 @@ namespace KLogistic.WebService
             Activities = new List<JournalActivityModel>();
             Attachments = new List<JournalAttachmentModel>();
             Drivers = new List<JournalDriverModel>();
+            ExtendedProperties = new List<ExtendedDataModel>();
+
+            if (!string.IsNullOrWhiteSpace(journal.ExtendedData)) {
+                
+            }
         }
     }
 }

@@ -121,5 +121,37 @@ namespace KLogistic.WebService
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "getJournalActivities", ResponseFormat = WebMessageFormat.Json)]
         GetJournalActivitiesResponse GetJournalActivities(ServiceRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "getJournalDrivers", ResponseFormat = WebMessageFormat.Json)]
+        GetJournalDriversResponse GetJournalDrivers(ServiceRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "getJournalDriver", ResponseFormat = WebMessageFormat.Json)]
+        GetJournalDriverResponse GetJournalDriver(ServiceRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "updateJournalDriver", ResponseFormat = WebMessageFormat.Json)]
+        BaseResponse UpdateJournalDriver(ServiceRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "addJournalDriver", ResponseFormat = WebMessageFormat.Json)]
+        GetJournalDriverResponse AddJournalDriver(ServiceRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "removeJournalDriver", ResponseFormat = WebMessageFormat.Json)]
+        BaseResponse RemoveJournalDriver(ServiceRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "removeAllJournalDriver", ResponseFormat = WebMessageFormat.Json)]
+        BaseResponse RemoveAllJournalDriver(ServiceRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "getJournalByName", ResponseFormat = WebMessageFormat.Json)]
+        GetJournalHistoryResponse GetJournalByName(ServiceRequest request);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "getJournalHistory", ResponseFormat = WebMessageFormat.Json)]
+        GetJournalHistoryResponse GetJournalHistory(ServiceRequest request);
     }
 }
