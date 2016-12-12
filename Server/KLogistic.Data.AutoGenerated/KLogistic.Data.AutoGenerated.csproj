@@ -58,6 +58,7 @@
     <Compile Include="DataContext.User.cs" />
     <Compile Include="Driver.cs" />
     <Compile Include="Enums.cs" />
+    <Compile Include="JournalRoute.cs" />
     <Compile Include="Journal.cs" />
     <Compile Include="JournalActivity.cs" />
     <Compile Include="JournalAttachment.cs" />

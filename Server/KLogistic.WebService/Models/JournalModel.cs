@@ -41,6 +41,15 @@ namespace KLogistic.WebService
         [DataMember(Name = "totalDuration")]
         public double TotalDuration { get; set; }
 
+        [DataMember(Name = "mooc")]
+        public string Mooc { get; set; }
+
+        [DataMember(Name = "container")]
+        public string Container { get; set; }
+
+        [DataMember(Name = "routeId")]
+        public long RouteId { get; set; }
+
         [DataMember(Name = "status")]
         public int Status { get; set; }
 
@@ -49,6 +58,9 @@ namespace KLogistic.WebService
 
         [DataMember(Name = "description")]
         public string Description { get; set; }
+
+        [DataMember(Name = "route")]
+        public RouteModel Route { get; set; }      
 
         [DataMember(Name = "stopPoints")]
         public List<JournalStopPointModel> StopPoints { get; set; }
@@ -79,6 +91,9 @@ namespace KLogistic.WebService
             ExtendedData = journal.ExtendedData;
             Description = journal.Description;
             LastUpdatedTS = journal.LastUpdatedTS;
+            Mooc = journal.Mooc;
+            Container = journal.Container;
+            RouteId = journal.RouteId ?? 0;
             CreatedTS = journal.CreatedTS;
 
             StopPoints = new List<JournalStopPointModel>();
@@ -87,9 +102,8 @@ namespace KLogistic.WebService
             Drivers = new List<JournalDriverModel>();
             ExtendedProperties = new List<ExtendedDataModel>();
 
-            if (!string.IsNullOrWhiteSpace(journal.ExtendedData)) {
-                
-            }
+            if (journal.Route != null)
+                Route = new RouteModel(journal.Route);
         }
     }
 }

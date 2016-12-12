@@ -10,5 +10,8 @@ namespace KLogistic.WebService
 
         [DataMember(Name = "token")]
         public string Token { get; set; }
+
+        [DataMember(Name = "truck")]
+        public TruckModel Truck { get; set; }
     }
 }

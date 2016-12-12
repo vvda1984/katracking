@@ -161,14 +161,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\ConfigController.cs" />
+    <Compile Include="Controllers\RouteController.cs" />
     <Compile Include="Controllers\JournalDriverController.cs" />
     <Compile Include="Interfaces\IConfigController.cs" />
+    <Compile Include="Interfaces\IRouteController.cs" />
     <Compile Include="Models\ExtendedDataModel.cs" />
     <Compile Include="Models\JournalHistoryModel.cs" />
     <Compile Include="Models\SettingModel.cs" />
     <Compile Include="Models\SyncActivityModel.cs" />
     <Compile Include="Models\SyncLocationModel.cs" />
     <Compile Include="Models\JournalTruckModel.cs" />
+    <Compile Include="Models\RouteModel.cs" />
     <Compile Include="Requests\ChangePasswordRequest.cs" />
     <Compile Include="Requests\SubmitSettingsRequest.cs" />
     <Compile Include="Requests\SyncRequest.cs" />
@@ -176,6 +179,8 @@
     <Compile Include="Requests\SyncLocationsRequest.cs" />
     <Compile Include="Requests\ServiceRequest.cs" />
     <Compile Include="Requests\UploadAttachmentRequest.cs" />
+    <Compile Include="Responses\GetRoutesResponse.cs" />
+    <Compile Include="Responses\GetRouteResponse.cs" />
     <Compile Include="Responses\GetJournalDriversResponse.cs" />
     <Compile Include="Responses\GetJournalDriverResponse.cs" />
     <Compile Include="Responses\GetJournalActivitiesResponse.cs" />

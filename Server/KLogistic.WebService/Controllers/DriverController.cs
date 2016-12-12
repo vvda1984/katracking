@@ -46,35 +46,21 @@ namespace KLogistic.WebService
                 if (driver == null)
                     throw new KException("Driver is not found");
 
-                string firstName = request.FirstName;
-                string lastName = request.LastName;
-                string ssn = request.Ssn;
-                string address = request.Address;
-                string dob = request.Dob;
-                string phone = request.Phone;
-                string email = request.Email;
-                string note = request.Note;
-                string licenseNo = request.LicenseNo;
-                string classType = request.ClassType;
-                string issuedPlace = request.IssuedPlace;
-                string expiredDate = request.ExpiredDate;
-                string issuedDate = request.IssuedDate;
-                int? status = request.Status;
-
-                if (firstName != null) driver.FirstName = firstName;
-                if (lastName != null) driver.LastName = lastName;
-                if (ssn != null) driver.SSN = ssn;
-                if (address != null) driver.Address = address;
-                if (dob != null) driver.DOB = DateTime.ParseExact(request.Dob, "yyyy-MM-dd", null); //dob.Value;
-                if (phone != null) driver.Phone = phone;
-                if (email != null) driver.Email = email;
-                if (note != null) driver.Note = note;
-                if (licenseNo != null) driver.LicenseNo = licenseNo;
-                if (classType != null) driver.ClassType = classType;
-                if (issuedPlace != null) driver.IssuedPlace = issuedPlace;
-                if (expiredDate != null) driver.ExpiredDate = DateTime.ParseExact(request.ExpiredDate, "yyyy-MM-dd", null);
-                if (issuedDate != null) driver.IssuedDate = DateTime.ParseExact(request.IssuedDate, "yyyy-MM-dd", null);
-                if (status != null) driver.Status = (Status)status.Value;
+                if (request.FirstName != null) driver.FirstName = request.FirstName;
+                if (request.LastName != null) driver.LastName = request.LastName;
+                if (request.Ssn != null) driver.SSN = request.Ssn;
+                if (request.Address != null) driver.Address = request.Address;
+                if (request.Dob != null) driver.DOB = DateTime.ParseExact(request.Dob, "yyyy-MM-dd", null); //dob.Value;
+                if (request.Phone != null) driver.Phone = request.Phone;
+                if (request.Email != null) driver.Email = request.Email;
+                if (request.Note != null) driver.Note = request.Note;
+                if (request.LicenseNo != null) driver.LicenseNo = request.LicenseNo;
+                if (request.ClassType != null) driver.ClassType = request.ClassType;
+                if (request.IssuedPlace != null) driver.IssuedPlace = request.IssuedPlace;
+                if (request.ExpiredDate != null) driver.ExpiredDate = DateTime.ParseExact(request.ExpiredDate, "yyyy-MM-dd", null);
+                if (request.IssuedDate != null) driver.IssuedDate = DateTime.ParseExact(request.IssuedDate, "yyyy-MM-dd", null);
+                if (request.Status != null) driver.Status = (Status)request.Status.Value;
+                if (request.TruckId != null) driver.TruckId = request.TruckId;
             });
         }
 
@@ -101,6 +87,7 @@ namespace KLogistic.WebService
                 string expiredDate = request.ExpiredDate;
                 string issuedDate = request.IssuedDate;
                 int? status = request.Status;
+                long? truckId = request.TruckId;
 
                 var existingUser = db.GetUser(username);
                 if (existingUser != null)
@@ -125,22 +112,20 @@ namespace KLogistic.WebService
                     LicenseNo = licenseNo,
                     ClassType = classType,
                     IssuedPlace = issuedPlace,
-                    ExpiredDate = DateTime.ParseExact(request.ExpiredDate, "yyyy-MM-dd", null),
-                    IssuedDate = DateTime.ParseExact(request.IssuedDate, "yyyy-MM-dd", null),
+                    TruckId = truckId,
                 };
-                driver.Validate();
-                //db.DBModel.Drivers.Add(driver);
+                if (expiredDate != null)
+                    driver.ExpiredDate = DateTime.ParseExact(request.ExpiredDate, "yyyy-MM-dd", null);
 
-                //var driver = new Driver();
-                //driver.User = user;
-                //driver.LicenseNo = licenseNo;
-                //driver.ClassType = classType;
-                //driver.IssuedPlace = issuedPlace;
-                //driver.ExpiredDate = DateTime.ParseExact(request.ExpiredDate, "yyyy-MM-dd", null);
-                //driver.IssuedDate = DateTime.ParseExact(request.IssuedDate, "yyyy-MM-dd", null);
+                if (issuedDate != null)
+                    driver.IssuedDate = DateTime.ParseExact(request.IssuedDate, "yyyy-MM-dd", null);
 
+                driver.Validate();                
+                
                 db.AddDriver(driver);
                 db.SaveChanges();
+
+                driver.Truck = db.DBModel.Trucks.FirstOrDefault(x => x.Id == truckId);
                 resp.Item = new DriverModel(driver);
             }, false);
         }
@@ -208,8 +193,7 @@ namespace KLogistic.WebService
                     driver.Status = Status.Deleted;
                     driver.LastUpdatedTS = DateTime.Now;
                 }
-
-            }, false);
+            });
         }
 
         public BaseResponse RestoreDriver(ServiceRequest request)

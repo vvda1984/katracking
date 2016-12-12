@@ -1,9 +1,7 @@
 ﻿using KLogistic.Core;
 using KLogistic.Data;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.ServiceModel.Web;
 
 namespace KLogistic.WebService
 {
@@ -34,6 +32,14 @@ namespace KLogistic.WebService
 
                 var appSession = db.SignIn(user);
                 resp.User = new UserModel(user);
+
+                if (user.Role == UserRole.Driver)
+                {
+                    Driver driver = (Driver)user;
+                    if (driver.Truck != null)
+                        resp.Truck = new TruckModel(driver.Truck);
+                }
+
                 resp.Token = appSession.Token;
             });
         }

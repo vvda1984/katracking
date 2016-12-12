@@ -53,9 +53,19 @@ namespace KLogistic.Data
 
         public string EstimatedDistance { get; set; }
 
+        public string EstimatedJournal { get; set; }
+
+        public string Mooc { get; set; }
+     
+        public string Container { get; set; }
+        
         public DateTime CreatedTS { get; set; }
 
         public DateTime LastUpdatedTS { get; set; }
+        
+        public long? RouteId { get; set; }
+
+        public virtual JournalRoute Route { get; set; }
 
         public virtual ICollection<JournalActivity> JournalActivities { get; set; }
 

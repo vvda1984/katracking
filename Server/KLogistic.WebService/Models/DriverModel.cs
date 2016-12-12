@@ -22,14 +22,25 @@ namespace KLogistic.WebService
         [DataMember(Name = "issuedDate")]
         public DateTime? IssuedDate { get; set; }
 
+        [DataMember(Name = "truckId")]
+        public long TruckId { get; set; }
+
+        [DataMember(Name = "truck")]
+        public TruckModel Truck { get; set; }
+        
         public DriverModel() { }
 
-        public DriverModel(Driver driver) : base(driver){
+        public DriverModel(Driver driver) : base(driver)
+        {
             LicenseNo = driver.LicenseNo;
             ClassType = driver.ClassType;
             IssuedDate = driver.IssuedDate;
             IssuedPlace = driver.IssuedPlace;
             ExpiredDate = driver.ExpiredDate;
+            TruckId = driver.TruckId ?? 0;
+            if (driver.Truck != null)
+                Truck = new TruckModel(driver.Truck);
+
             //CreatedTS = driver.CreatedTS;
             //LastUpdatedTS = driver.LastUpdatedTS;
         }

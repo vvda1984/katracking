@@ -122,7 +122,7 @@ namespace KLogistic.WebService
                 throw new KException("Missing parameter");
         }
 
-        private long ValidateParamLong(long? id, string name = "") 
+        private long GetParam(long? id, string name = "") 
         {
             if (id == null)
                 throw new KException($"Missing parameter {name}");

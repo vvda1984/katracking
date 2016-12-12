@@ -24,5 +24,6 @@ namespace KLogistic.Data
         public virtual DbSet<Setting> Settings { get; set; }
         public virtual DbSet<Truck> Trucks { get; set; }
         public virtual DbSet<User> Users { get; set; }
+        public virtual DbSet<JournalRoute> Routes { get; set; }        
     }
 }

@@ -159,5 +159,20 @@ namespace KLogistic.WebService
 
         [DataMember(Name = "extendedProperties")]
         public List<ExtendedDataModel> ExtendedProperties { get; set; }
+
+        [DataMember]
+        public string Mooc { get; set; }
+
+        [DataMember]
+        public string Container { get; set; }
+
+        [DataMember]
+        public string EstimatedJournal { get; set; }
+
+        [DataMember]
+        public long? RouteId { get; set; }
+
+        [DataMember]
+        public string RoutePoints { get; set; }
     }
 }

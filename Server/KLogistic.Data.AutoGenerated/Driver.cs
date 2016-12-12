@@ -24,5 +24,8 @@ namespace KLogistic.Data
         public string IssuedPlace { get; set; }
 
         //public virtual User User { get; set; }
+        public long? TruckId { get; set; }
+
+        public virtual Truck Truck { get; set; }
     }
 }

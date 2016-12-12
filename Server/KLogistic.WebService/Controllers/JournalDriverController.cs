@@ -35,8 +35,8 @@ namespace KLogistic.WebService
         {
             return Run<ServiceRequest, GetJournalDriverResponse>(request, (resp, db, session) =>
             {
-                long journalId = ValidateParamLong(request.JournalId);
-                long driverId = ValidateParamLong(request.DriverId);
+                long journalId = GetParam(request.JournalId);
+                long driverId = GetParam(request.DriverId);
                 var i = db.DBModel.JournalDrivers.FirstOrDefault(x => x.JournalId == journalId && x.UserId == driverId);
                 if (i != null)
                 {
@@ -50,8 +50,8 @@ namespace KLogistic.WebService
         {
             return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {
-                long journalId = ValidateParamLong(request.JournalId);
-                long driverId = ValidateParamLong(request.DriverId);
+                long journalId = GetParam(request.JournalId);
+                long driverId = GetParam(request.DriverId);
 
                 int? status = request.Status;
                 string description = request.Description;
@@ -71,8 +71,8 @@ namespace KLogistic.WebService
         {
             return Run<ServiceRequest, GetJournalDriverResponse>(request, (resp, db, session) =>
             {
-                long journalId = ValidateParamLong(request.JournalId);
-                long driverId = ValidateParamLong(request.DriverId);
+                long journalId = GetParam(request.JournalId);
+                long driverId = GetParam(request.DriverId);
 
                 int? status = request.Status;
                 string description = request.Description;
@@ -111,8 +111,8 @@ namespace KLogistic.WebService
         {
             return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {
-                long journalId = ValidateParamLong(request.JournalId);
-                long driverId = ValidateParamLong(request.DriverId);
+                long journalId = GetParam(request.JournalId);
+                long driverId = GetParam(request.DriverId);
 
                 var item = db.DBModel.JournalDrivers.FirstOrDefault(x => x.JournalId == journalId && x.UserId == driverId);
                 if (item == null)

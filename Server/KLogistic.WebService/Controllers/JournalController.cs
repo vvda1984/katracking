@@ -220,40 +220,26 @@ namespace KLogistic.WebService
         {       
             return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {
-                ValidateParam(request.JournalId);
-                long journalid = request.JournalId.Value;
+                ValidateParam(request.JournalId);                
+                var journal = GetJournal(db, request.JournalId.Value);
 
-                var journal = GetJournal(db, journalid);
-
-                string name = request.Name;
-                string startLocation = request.StartLocation;
-                double startLat = request.StartLat ?? request.StartLat.Value;
-                double startLng = request.StartLng?? request.StartLng.Value;
-                string endLocation = request.EndLocation;
-                double endLat = request.EndLat ?? request.EndLat.Value;
-                double endLng = request.EndLng ?? request.EndLng.Value;
-                string activeDate = request.ActiveDate;
-                int status = request.Status != null ? request.Status.Value : -1;
-                string extendedData = request.ExtendedData;
-                string description = request.Description;
-                string referenceCode = request.ReferenceCode;
-                string estimatedDuration = request.EstimatedDuration;
-                string estimatedDistance = request.EstimatedDistance;
-
-                if (name != null) journal.Name = name;
-                if (description != null) journal.Description = description;
-                if (startLocation != null) journal.StartLocation = startLocation;
-                if (startLat > 0) journal.StartLat = startLat;
-                if (startLng > 0) journal.StartLng = startLng;
-                if (endLocation != null) journal.EndLocation = endLocation;
-                if (endLat > 0) journal.EndLat = endLat;
-                if (endLng > 0) journal.EndLng = endLng;
-                if (activeDate != null) journal.ActiveDate = DateTime.ParseExact(request.ActiveDate, "yyyy-MM-dd", null);
-                if (extendedData != null) journal.ExtendedData = extendedData;
-                if (status >= 0) journal.Status = (JournalStatus)status;
-                if (referenceCode != null) journal.ReferenceCode = referenceCode;
-                if (estimatedDuration != null) journal.EstimatedDuration = estimatedDuration;
-                if (estimatedDistance != null) journal.EstimatedDistance = estimatedDistance;
+                if (request.Name != null) journal.Name = request.Name;
+                if (request.Description != null) journal.Description = request.Description;
+                if (request.StartLocation != null) journal.StartLocation = request.StartLocation;
+                if (request.StartLat != null) journal.StartLat = request.StartLat.Value;
+                if (request.StartLng > 0) journal.StartLng = request.StartLng.Value;
+                if (request.EndLocation != null) journal.EndLocation = request.EndLocation;
+                if (request.EndLat > 0) journal.EndLat = request.EndLat.Value;
+                if (request.EndLng > 0) journal.EndLng = request.EndLng.Value;
+                if (request.ActiveDate != null) journal.ActiveDate = DateTime.ParseExact(request.ActiveDate, "yyyy-MM-dd", null);
+                if (request.Status != null) journal.Status = (JournalStatus)request.Status.Value;
+                if (request.ExtendedData != null) journal.ExtendedData = request.ExtendedData;                
+                if (request.ReferenceCode != null) journal.ReferenceCode = request.ReferenceCode;
+                if (request.EstimatedDuration != null) journal.EstimatedDuration = request.EstimatedDuration;
+                if (request.EstimatedDistance != null) journal.EstimatedDistance = request.EstimatedDistance;
+                if (request.Mooc != null) journal.Mooc = request.Mooc;
+                if (request.Container != null) journal.Container = request.Container;
+                if (request.RouteId != null) journal.RouteId = request.RouteId.Value;
 
                 journal.LastUpdatedTS = DateTime.Now;
             });
@@ -262,44 +248,27 @@ namespace KLogistic.WebService
         public GetJournalResponse AddJournal(ServiceRequest request)
         {
             return Run<ServiceRequest, GetJournalResponse>(request, (resp, db, session) =>
-            {
-                //ValidateParam(request.JournalId);
-                //long journalid = request.JournalId.Value;
-
-                string name = request.Name;
-                string startLocation = request.StartLocation;
-                double startLat = request.StartLat ?? request.StartLat.Value;
-                double startLng = request.StartLng ?? request.StartLng.Value;
-                string endLocation = request.EndLocation;
-                double endLat = request.EndLat ?? request.EndLat.Value;
-                double endLng = request.EndLng ?? request.EndLng.Value;
-                string activeDate = request.ActiveDate;
-                int status = request.Status != null ? request.Status.Value : -1;
-                string extendedData = request.ExtendedData;
-                string description = request.Description;
-                string referenceCode = request.ReferenceCode;
-                string estimatedDuration = request.EstimatedDuration;
-                string estimatedDistance = request.EstimatedDistance;
-
+            {                              
                 var journal = new Journal();
-
-                journal.Name = name;
-                journal.Description = description;
-                journal.StartLocation = startLocation;
-                journal.StartLat = startLat;
-                journal.StartLng = startLng;
-                journal.EndLocation = endLocation;
-                journal.EndLat = endLat;
-                journal.EndLng = endLng;
-                journal.ActiveDate = activeDate != null ? DateTime.ParseExact(request.ActiveDate, "yyyy-MM-dd", null) : DateTime.Now;
-                journal.ExtendedData = extendedData;
-                journal.Status = (JournalStatus)status;
+                journal.Name = request.Name;
+                journal.Description = request.Description;
+                journal.StartLocation = request.StartLocation;
+                journal.StartLat = request.StartLat ?? 0;
+                journal.StartLng = request.StartLng ?? 0;
+                journal.EndLocation = request.EndLocation;
+                journal.EndLat = request.EndLat ?? 0;
+                journal.EndLng = request.EndLng ?? 0;
+                journal.ActiveDate = request.ActiveDate != null ? DateTime.ParseExact(request.ActiveDate, "yyyy-MM-dd", null) : DateTime.Now;
+                journal.ExtendedData = request.ExtendedData;
+                journal.Status = (JournalStatus)(request.Status ?? 0);
                 journal.CreatedTS = DateTime.Now;
-                journal.LastUpdatedTS = DateTime.Now;
-                journal.Status = JournalStatus.Actived;
-                journal.ReferenceCode = referenceCode;
-                journal.EstimatedDuration = estimatedDuration;
-                journal.EstimatedDistance = estimatedDistance;
+                journal.LastUpdatedTS = DateTime.Now;                
+                journal.ReferenceCode = request.ReferenceCode;
+                journal.EstimatedDuration = request.EstimatedDuration;
+                journal.EstimatedDistance = request.EstimatedDistance;                
+                journal.Mooc = request.Mooc;
+                journal.Container = request.Container;
+                journal.RouteId = request.RouteId;
 
                 journal.Validate();
 
@@ -490,9 +459,9 @@ namespace KLogistic.WebService
         {
             return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {
-                long journalId = ValidateParamLong(request.JournalId, "journalId");
-                long truckId = ValidateParamLong(request.TruckId, "truckId");
-                long driverId = ValidateParamLong(request.DriverId, "driverId");
+                long journalId = GetParam(request.JournalId, "journalId");
+                long truckId = GetParam(request.TruckId, "truckId");
+                long driverId = GetParam(request.DriverId, "driverId");
                 
                 //var lat = ValidateParamDouble(request.Latitude, "latitude");
                 //var lng = ValidateParamDouble(request.Longitude, "longitude");
@@ -532,9 +501,9 @@ namespace KLogistic.WebService
         {
             return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {
-                long journalId = ValidateParamLong(request.JournalId, "journalId");
-                long truckId = ValidateParamLong(request.TruckId, "truckId");
-                long driverId = ValidateParamLong(request.DriverId, "driverId");
+                long journalId = GetParam(request.JournalId, "journalId");
+                long truckId = GetParam(request.TruckId, "truckId");
+                long driverId = GetParam(request.DriverId, "driverId");
 
                 //var lat = ValidateParamDouble(request.Latitude, "latitude");
                 //var lng = ValidateParamDouble(request.Longitude, "longitude");
@@ -574,9 +543,9 @@ namespace KLogistic.WebService
         {
             return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {
-                long journalId = ValidateParamLong(request.JournalId, "journalId");
-                long truckId = ValidateParamLong(request.TruckId, "truckId");
-                long driverId = ValidateParamLong(request.DriverId, "driverId");
+                long journalId = GetParam(request.JournalId, "journalId");
+                long truckId = GetParam(request.TruckId, "truckId");
+                long driverId = GetParam(request.DriverId, "driverId");
 
                 //var lat = ValidateParamDouble(request.Latitude, "latitude");
                 //var lng = ValidateParamDouble(request.Longitude, "longitude");
@@ -616,15 +585,15 @@ namespace KLogistic.WebService
         {
             return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {
-                long journalId = ValidateParamLong(request.JournalId, "journalId");
-                long truckId = ValidateParamLong(request.TruckId, "truckId");
-                long driverId = ValidateParamLong(request.DriverId, "driverId");
+                long journalId = GetParam(request.JournalId, "journalId");
+                long truckId = GetParam(request.TruckId, "truckId");
+                long driverId = GetParam(request.DriverId, "driverId");
 
                 var lat = ValidateParamDouble(request.Latitude, "latitude");
                 var lng = ValidateParamDouble(request.Longitude, "longitude");
                 var acc = ValidateParamDouble(request.Accuracy, "accuracy");
 
-                long activityId = ValidateParamLong(request.ActivityId, "activityId");
+                long activityId = GetParam(request.ActivityId, "activityId");
                 var activityMessage = request.ActivityMessage;
 
                 var date = request.CreatedTS != null ? DateTime.ParseExact(request.CreatedTS, "yyyy-MM-dd HH:mm:ss", null) : DateTime.Now;
@@ -652,10 +621,10 @@ namespace KLogistic.WebService
         {
             return Run<ServiceRequest, BaseResponse>(request, (resp, db, session) =>
             {
-                long journalId = ValidateParamLong(request.JournalId, "journalId");
-                long driverId = ValidateParamLong(request.DriverId, "driverId");                
-                long activityId = ValidateParamLong(request.ActivityId, "activityId");
-                long truckId = ValidateParamLong(request.TruckId, "truckId");
+                long journalId = GetParam(request.JournalId, "journalId");
+                long driverId = GetParam(request.DriverId, "driverId");                
+                long activityId = GetParam(request.ActivityId, "activityId");
+                long truckId = GetParam(request.TruckId, "truckId");
 
                 var activityMessage = request.ActivityMessage;
                 var date = request.ActiveDate != null ? DateTime.ParseExact(request.Dob, "yyyy-MM-dd HH:mm:ss", null) : DateTime.Now;
@@ -667,7 +636,7 @@ namespace KLogistic.WebService
         {
             return Run<ServiceRequest, GetJournalsResponse>(request, (resp, db, session) =>
             {
-                long driverId = ValidateParamLong(request.DriverId);
+                long driverId = GetParam(request.DriverId);
                 var includeActivity = request.IncludeActivity == null ? false : request.IncludeActivity.Value;
                 var includeAttachment = request.IncludeAttachment == null ? false : request.IncludeAttachment.Value;
                 //var includeStopPoint = request.IncludeStopPoint == null ? false : request.IncludeStopPoint.Value;
@@ -737,7 +706,7 @@ namespace KLogistic.WebService
         {
             return Run<ServiceRequest, GetJournalActivitiesResponse>(request, (resp, db, session) =>
             {
-                long journalId = ValidateParamLong(request.JournalId, "journalId");
+                long journalId = GetParam(request.JournalId, "journalId");
                 var activities = db.DBModel.JournalActivities.Include(x => x.Activity).Where(x => x.JournalId == journalId).ToArray();
                 resp.Items = new List<JournalActivityModel>();
                 foreach (var item in activities)
@@ -749,7 +718,7 @@ namespace KLogistic.WebService
         {
             return Run<ServiceRequest, GetJournalHistoryResponse>(request, (resp, db, session) =>
             {
-                long journalId = ValidateParamLong(request.JournalId, "journalId");
+                long journalId = GetParam(request.JournalId, "journalId");
                 var journal = db.DBModel.Journals
                     .Include(x => x.JournalActivities)
                     .Include(x => x.JournalStopPoints)

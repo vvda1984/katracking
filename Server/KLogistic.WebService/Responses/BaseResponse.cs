@@ -38,8 +38,8 @@ namespace KLogistic.WebService
             cb.Register(c => new GetJournalDriverResponse()).As<GetJournalDriverResponse>();
             cb.Register(c => new GetJournalDriversResponse()).As<GetJournalDriversResponse>();
             cb.Register(c => new GetJournalHistoryResponse()).As<GetJournalHistoryResponse>();
-            
-
+            cb.Register(c => new GetRouteResponse()).As<GetRouteResponse>();
+            cb.Register(c => new GetRoutesResponse()).As<GetRoutesResponse>();
         }
     }
 }
